@@ -25,8 +25,23 @@ export interface HomeContent {
           name: {
             label: string;
           };
-          phone: {
+          email: {
             label: string;
+          };
+          dietary: {
+            label: string;
+            options: {
+              none: string;
+              pescetarian: string;
+              vegan: string;
+              other: string;
+            };
+            otherPlaceholder: string;
+          };
+          alcohol: {
+            label: string;
+            yes: string;
+            no: string;
           };
         };
       };
@@ -54,7 +69,7 @@ export const homeContent: HomeContent = {
   },
   messages: {
     error: {
-      validation: "Please provide both name and phone.",
+      validation: "Please provide name, email, dietary preferences, and alcohol preference.",
       save: "Failed to save. Please try again.",
       load: "Failed to load registrants"
     },
@@ -70,8 +85,23 @@ export const homeContent: HomeContent = {
           name: {
             label: "Name"
           },
-          phone: {
-            label: "Phone"
+          email: {
+            label: "Email"
+          },
+          dietary: {
+            label: "Dietary Preferences",
+            options: {
+              none: "None",
+              pescetarian: "Pescetarian",
+              vegan: "Vegan",
+              other: "Other"
+            },
+            otherPlaceholder: "Please specify..."
+          },
+          alcohol: {
+            label: "Do you want alcohol?",
+            yes: "Yes",
+            no: "No"
           }
         }
       },
