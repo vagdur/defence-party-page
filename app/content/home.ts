@@ -52,10 +52,6 @@ export interface HomeContent {
     };
     submit: string;
   };
-  registrants: {
-    title: string;
-    empty: string;
-  };
 }
 
 export const homeContent: HomeContent = {
@@ -111,9 +107,5 @@ export const homeContent: HomeContent = {
       }
     },
     submit: "Register for Party"
-  },
-  registrants: {
-    title: "All Registrants",
-    empty: "No registrations yet."
   }
 };

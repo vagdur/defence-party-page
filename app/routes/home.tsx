@@ -279,27 +279,6 @@ export default function Home(_: Route.ComponentProps) {
         </div>
       </Form>
 
-      <section className="mt-10">
-        <h2 className="text-xl font-semibold mb-3">{homeContent.registrants.title} ({data.registrants.length})</h2>
-        {data.error && (
-          <p className="text-red-600 dark:text-red-300 mb-3">{data.error}</p>
-        )}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-            {data.registrants.length === 0 ? (
-              <li className="p-4 text-gray-500 dark:text-gray-400 text-center">{homeContent.registrants.empty}</li>
-            ) : (
-              data.registrants.map((r) => (
-                <li key={r.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <div>
-                    <span className="font-medium text-gray-900 dark:text-white">{r.name}</span>
-                  </div>
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
-      </section>
     </main>
   );
 }
