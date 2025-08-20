@@ -43,6 +43,16 @@ export interface HomeContent {
             yes: string;
             no: string;
           };
+          languages: {
+            label: string;
+            placeholder: string;
+            addButton: string;
+          };
+          topics: {
+            label: string;
+            placeholder: string;
+            addButton: string;
+          };
         };
       };
       relationships: {
@@ -98,6 +108,16 @@ export const homeContent: HomeContent = {
             label: "Do you want alcohol?",
             yes: "Yes",
             no: "No"
+          },
+          languages: {
+            label: "Languages you are comfortable having a conversation in",
+            placeholder: "Enter a language...",
+            addButton: "Add Language"
+          },
+          topics: {
+            label: "Conversation topics of interest",
+            placeholder: "Enter a topic...",
+            addButton: "Add Topic"
           }
         }
       },

@@ -19,19 +19,52 @@ export async function loader({ context }: Route.LoaderArgs) {
       ),
       REGISTRANTS.prepare(
         "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, knows_person BOOLEAN NOT NULL, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
+      ),
+      REGISTRANTS.prepare(
+        "CREATE TABLE IF NOT EXISTS languages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT DEFAULT (datetime('now')))"
+      ),
+      REGISTRANTS.prepare(
+        "CREATE TABLE IF NOT EXISTS topics (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT DEFAULT (datetime('now')))"
+      ),
+      REGISTRANTS.prepare(
+        "CREATE TABLE IF NOT EXISTS registrant_languages (id INTEGER PRIMARY KEY AUTOINCREMENT, registrant_id INTEGER NOT NULL, language_id INTEGER NOT NULL, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (registrant_id) REFERENCES registrants(id), FOREIGN KEY (language_id) REFERENCES languages(id))"
+      ),
+      REGISTRANTS.prepare(
+        "CREATE TABLE IF NOT EXISTS registrant_topics (id INTEGER PRIMARY KEY AUTOINCREMENT, registrant_id INTEGER NOT NULL, topic_id INTEGER NOT NULL, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (registrant_id) REFERENCES registrants(id), FOREIGN KEY (topic_id) REFERENCES topics(id))"
       )
     ]);
 
-    const { results } = await REGISTRANTS
-      .prepare(
-        "SELECT id, name FROM registrants ORDER BY name ASC"
-      )
-      .all<{ id: number; name: string }>();
+    const [registrantsResult, languagesResult, topicsResult] = await Promise.all([
+      REGISTRANTS
+        .prepare(
+          "SELECT id, name FROM registrants ORDER BY name ASC"
+        )
+        .all<{ id: number; name: string }>(),
+      REGISTRANTS
+        .prepare(
+          "SELECT id, name FROM languages ORDER BY name ASC"
+        )
+        .all<{ id: number; name: string }>(),
+      REGISTRANTS
+        .prepare(
+          "SELECT id, name FROM topics ORDER BY name ASC"
+        )
+        .all<{ id: number; name: string }>()
+    ]);
     
-    return { registrants: results ?? [] };
+    return { 
+      registrants: registrantsResult.results ?? [],
+      languages: languagesResult.results ?? [],
+      topics: topicsResult.results ?? []
+    };
   } catch (error) {
     console.error("Loader error:", error);
-    return { registrants: [], error: homeContent.messages.error.load };
+    return { 
+      registrants: [], 
+      languages: [],
+      topics: [],
+      error: homeContent.messages.error.load 
+    };
   }
 }
 
@@ -43,6 +76,10 @@ export async function action({ request, context }: Route.ActionArgs) {
   const dietary = String(formData.get("dietary") ?? "").trim();
   const dietaryOther = String(formData.get("dietary_other") ?? "").trim();
   const alcohol = formData.get("alcohol");
+  
+  // Get languages and topics from form data
+  const languages = formData.getAll("languages").map(String).filter(Boolean);
+  const topics = formData.getAll("topics").map(String).filter(Boolean);
   
   if (!name || !email || !dietary || !alcohol) {
     return { ok: false, error: homeContent.messages.error.validation };
@@ -73,6 +110,86 @@ export async function action({ request, context }: Route.ActionArgs) {
     
     if (!newRegistrantId) {
       throw new Error("Failed to get new registrant ID");
+    }
+    
+    // Process languages
+    const languageStatements = [];
+    for (const languageName of languages) {
+      const trimmedLanguage = languageName.trim();
+      if (trimmedLanguage) {
+        // Try to insert the language (will fail if it already exists due to UNIQUE constraint)
+        languageStatements.push(
+          REGISTRANTS.prepare("INSERT OR IGNORE INTO languages (name) VALUES (?)").bind(trimmedLanguage)
+        );
+      }
+    }
+    
+    // Process topics
+    const topicStatements = [];
+    for (const topicName of topics) {
+      const trimmedTopic = topicName.trim();
+      if (trimmedTopic) {
+        // Try to insert the topic (will fail if it already exists due to UNIQUE constraint)
+        topicStatements.push(
+          REGISTRANTS.prepare("INSERT OR IGNORE INTO topics (name) VALUES (?)").bind(trimmedTopic)
+        );
+      }
+    }
+    
+    // Execute language and topic inserts
+    if (languageStatements.length > 0) {
+      await REGISTRANTS.batch(languageStatements);
+    }
+    if (topicStatements.length > 0) {
+      await REGISTRANTS.batch(topicStatements);
+    }
+    
+    // Get language and topic IDs and create relationships
+    const registrantLanguageStatements = [];
+    const registrantTopicStatements = [];
+    
+    for (const languageName of languages) {
+      const trimmedLanguage = languageName.trim();
+      if (trimmedLanguage) {
+        // Get the language ID
+        const { results: languageResults } = await REGISTRANTS
+          .prepare("SELECT id FROM languages WHERE name = ?")
+          .bind(trimmedLanguage)
+          .all<{ id: number }>();
+        
+        if (languageResults && languageResults.length > 0) {
+          registrantLanguageStatements.push(
+            REGISTRANTS.prepare("INSERT INTO registrant_languages (registrant_id, language_id) VALUES (?, ?)")
+              .bind(newRegistrantId, languageResults[0].id)
+          );
+        }
+      }
+    }
+    
+    for (const topicName of topics) {
+      const trimmedTopic = topicName.trim();
+      if (trimmedTopic) {
+        // Get the topic ID
+        const { results: topicResults } = await REGISTRANTS
+          .prepare("SELECT id FROM topics WHERE name = ?")
+          .bind(trimmedTopic)
+          .all<{ id: number }>();
+        
+        if (topicResults && topicResults.length > 0) {
+          registrantTopicStatements.push(
+            REGISTRANTS.prepare("INSERT INTO registrant_topics (registrant_id, topic_id) VALUES (?, ?)")
+              .bind(newRegistrantId, topicResults[0].id)
+          );
+        }
+      }
+    }
+    
+    // Execute registrant-language and registrant-topic relationship inserts
+    if (registrantLanguageStatements.length > 0) {
+      await REGISTRANTS.batch(registrantLanguageStatements);
+    }
+    if (registrantTopicStatements.length > 0) {
+      await REGISTRANTS.batch(registrantTopicStatements);
     }
     
     // Get all existing registrants to process relationships
@@ -239,6 +356,78 @@ export default function Home(_: Route.ComponentProps) {
                   <label htmlFor="alcohol_no" className="ml-2 text-sm font-medium cursor-pointer">
                     {homeContent.form.sections.information.fields.alcohol.no}
                   </label>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">{homeContent.form.sections.information.fields.languages.label}</label>
+              <div className="space-y-3">
+                {/* Existing languages */}
+                {data.languages.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {data.languages.map((language) => (
+                      <div key={language.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`language_${language.id}`}
+                          name="languages"
+                          value={language.name}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor={`language_${language.id}`} className="ml-2 text-sm font-medium cursor-pointer">
+                          {language.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Add new language */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    id="new_language"
+                    name="languages"
+                    placeholder={homeContent.form.sections.information.fields.languages.placeholder}
+                    className="flex-1 rounded-md border border-gray-300 bg-white p-2 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">{homeContent.form.sections.information.fields.topics.label}</label>
+              <div className="space-y-3">
+                {/* Existing topics */}
+                {data.topics.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {data.topics.map((topic) => (
+                      <div key={topic.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`topic_${topic.id}`}
+                          name="topics"
+                          value={topic.name}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor={`topic_${topic.id}`} className="ml-2 text-sm font-medium cursor-pointer">
+                          {topic.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Add new topic */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    id="new_topic"
+                    name="topics"
+                    placeholder={homeContent.form.sections.information.fields.topics.placeholder}
+                    className="flex-1 rounded-md border border-gray-300 bg-white p-2 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
                 </div>
               </div>
             </div>
