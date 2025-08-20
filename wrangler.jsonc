@@ -12,6 +12,14 @@
   "observability": {
     "enabled": true
   },
+  "d1_databases": [
+    {
+      "binding": "REGISTRANTS",
+      "database_name": "party-registrants"
+      // Optionally add "database_id" for production deployments
+      // "database_id": "<your-d1-database-id>"
+    }
+  ],
   /**
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
