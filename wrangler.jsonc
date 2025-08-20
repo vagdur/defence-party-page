@@ -15,9 +15,8 @@
   "d1_databases": [
     {
       "binding": "REGISTRANTS",
-      "database_name": "party-registrants"
-      // Optionally add "database_id" for production deployments
-      // "database_id": "<your-d1-database-id>"
+      "database_name": "party-registrants",
+      "database_id": "f4dc0b94-717d-4ca7-8f65-f1aa46eb15e9"
     }
   ],
   /**
