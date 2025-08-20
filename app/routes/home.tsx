@@ -11,14 +11,15 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ context }: Route.LoaderArgs) {
   const { REGISTRANTS, VALUE_FROM_CLOUDFLARE } = context.cloudflare.env;
   try {
-    // Ensure table exists; id is auto-increment primary key
-    await REGISTRANTS.exec(
-      "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, phone TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')))"
-    );
-    
-    await REGISTRANTS.exec(
-      "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, knows_person BOOLEAN NOT NULL, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
-    );
+    // Ensure tables exist using batch operations
+    await REGISTRANTS.batch([
+      REGISTRANTS.prepare(
+        "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, phone TEXT NOT NULL, created_at TEXT DEFAULT (datetime('now')))"
+      ),
+      REGISTRANTS.prepare(
+        "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, knows_person BOOLEAN NOT NULL, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
+      )
+    ]);
 
     const { results } = await REGISTRANTS
       .prepare(
@@ -44,16 +45,17 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   try {
-    // Start a transaction
-    await REGISTRANTS.exec("BEGIN TRANSACTION");
+    // Use D1's transaction API:
+    const result = await REGISTRANTS.batch([
+      // Insert the new registrant
+      REGISTRANTS.prepare("INSERT INTO registrants (name, phone) VALUES (?1, ?2)").bind(name, phone)
+    ]);
     
-    // Insert the new registrant
-    const insertResult = await REGISTRANTS
-      .prepare("INSERT INTO registrants (name, phone) VALUES (?1, ?2)")
-      .bind(name, phone)
-      .run();
+    const newRegistrantId = result[0].meta?.last_row_id;
     
-    const newRegistrantId = insertResult.meta.last_row_id;
+    if (!newRegistrantId) {
+      throw new Error("Failed to get new registrant ID");
+    }
     
     // Get all existing registrants to process relationships
     const { results: existingRegistrants } = await REGISTRANTS
@@ -61,24 +63,23 @@ export async function action({ request, context }: Route.ActionArgs) {
       .bind(newRegistrantId)
       .all<{ id: number }>();
     
-    // Process relationship checkboxes
-    for (const registrant of existingRegistrants ?? []) {
+    // Prepare relationship insert statements
+    const relationshipStatements = (existingRegistrants ?? []).map((registrant: { id: number }) => {
       const knowsKey = `knows_${registrant.id}`;
       const knowsPerson = formData.get(knowsKey) === "on";
       
-      await REGISTRANTS
+      return REGISTRANTS
         .prepare("INSERT INTO relationships (new_registrant_id, known_registrant_id, knows_person) VALUES (?1, ?2, ?3)")
-        .bind(newRegistrantId, registrant.id, knowsPerson ? 1 : 0)
-        .run();
-    }
+        .bind(newRegistrantId, registrant.id, knowsPerson ? 1 : 0);
+    });
     
-    // Commit the transaction
-    await REGISTRANTS.exec("COMMIT");
+    // Execute all relationship inserts in a batch if there are any
+    if (relationshipStatements.length > 0) {
+      await REGISTRANTS.batch(relationshipStatements);
+    }
     
     return { ok: true };
   } catch (error) {
-    // Rollback on error
-    await REGISTRANTS.exec("ROLLBACK");
     console.error("Action error:", error);
     return { ok: false, error: "Failed to save. Please try again." };
   }
