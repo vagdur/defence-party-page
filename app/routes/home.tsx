@@ -10,7 +10,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const { REGISTRANTS, VALUE_FROM_CLOUDFLARE } = context.cloudflare.env;
+  const { REGISTRANTS } = context.cloudflare.env;
   try {
     // Ensure tables exist using batch operations
     await REGISTRANTS.batch([
@@ -24,14 +24,14 @@ export async function loader({ context }: Route.LoaderArgs) {
 
     const { results } = await REGISTRANTS
       .prepare(
-        "SELECT id, name, phone, created_at FROM registrants ORDER BY name ASC"
+        "SELECT id, name FROM registrants ORDER BY name ASC"
       )
-      .all<{ id: number; name: string; phone: string; created_at: string }>();
+      .all<{ id: number; name: string }>();
     
-    return { message: VALUE_FROM_CLOUDFLARE, registrants: results ?? [] };
+    return { registrants: results ?? [] };
   } catch (error) {
     console.error("Loader error:", error);
-    return { message: VALUE_FROM_CLOUDFLARE, registrants: [], error: homeContent.messages.error.load };
+    return { registrants: [], error: homeContent.messages.error.load };
   }
 }
 
@@ -93,7 +93,6 @@ export default function Home(_: Route.ComponentProps) {
   return (
     <main className="pt-16 p-4 container mx-auto max-w-2xl">
       <h1 className="text-3xl font-bold mb-4 text-center">{homeContent.page.title}</h1>
-      <p className="mb-6 text-gray-600 dark:text-gray-300 text-center">{data.message}</p>
 
       {actionData?.error && (
         <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
@@ -181,11 +180,7 @@ export default function Home(_: Route.ComponentProps) {
                 <li key={r.id} className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700">
                   <div>
                     <span className="font-medium text-gray-900 dark:text-white">{r.name}</span>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{r.phone}</p>
                   </div>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    {new Date(r.created_at).toLocaleDateString()}
-                  </span>
                 </li>
               ))
             )}

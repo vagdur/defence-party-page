@@ -6,9 +6,9 @@
   "name": "defence-party-page",
   "compatibility_date": "2025-04-01",
   "main": "./workers/app.ts",
-  "vars": {
+  /**"vars": {
     "VALUE_FROM_CLOUDFLARE": "Et in lumine"
-  },
+  },*/
   "observability": {
     "enabled": true
   },

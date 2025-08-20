@@ -3,7 +3,6 @@
 // Runtime types generated with workerd@1.20250617.0 2025-04-01 
 declare namespace Cloudflare {
 	interface Env {
-		VALUE_FROM_CLOUDFLARE: "Hello from Hono/CF";
 		REGISTRANTS: D1Database;
 	}
 }
