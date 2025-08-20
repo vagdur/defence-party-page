@@ -1,6 +1,7 @@
 import type { Route } from "./+types/home";
 import { Form, useActionData, useLoaderData } from "react-router";
 import { homeContent } from "../content/home";
+import { useState } from "react";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -224,6 +225,52 @@ export default function Home(_: Route.ComponentProps) {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   
+  // State for managing new languages and topics
+  const [newLanguage, setNewLanguage] = useState("");
+  const [newTopic, setNewTopic] = useState("");
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  
+  const handleAddLanguage = () => {
+    const trimmed = newLanguage.trim();
+    if (trimmed && !selectedLanguages.includes(trimmed)) {
+      setSelectedLanguages([...selectedLanguages, trimmed]);
+      setNewLanguage("");
+    }
+  };
+  
+  const handleRemoveLanguage = (language: string) => {
+    setSelectedLanguages(selectedLanguages.filter((l: string) => l !== language));
+  };
+  
+  const handleAddTopic = () => {
+    const trimmed = newTopic.trim();
+    if (trimmed && !selectedTopics.includes(trimmed)) {
+      setSelectedTopics([...selectedTopics, trimmed]);
+      setNewTopic("");
+    }
+  };
+  
+  const handleRemoveTopic = (topic: string) => {
+    setSelectedTopics(selectedTopics.filter((t: string) => t !== topic));
+  };
+  
+  const handleLanguageCheckbox = (language: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLanguages([...selectedLanguages, language]);
+    } else {
+      setSelectedLanguages(selectedLanguages.filter((l: string) => l !== language));
+    }
+  };
+  
+  const handleTopicCheckbox = (topic: string, checked: boolean) => {
+    if (checked) {
+      setSelectedTopics([...selectedTopics, topic]);
+    } else {
+      setSelectedTopics(selectedTopics.filter((t: string) => t !== topic));
+    }
+  };
+  
   return (
     <main className="pt-16 p-4 container mx-auto max-w-2xl">
       <h1 className="text-3xl font-bold mb-4 text-center">{homeContent.page.title}</h1>
@@ -371,8 +418,8 @@ export default function Home(_: Route.ComponentProps) {
                         <input
                           type="checkbox"
                           id={`language_${language.id}`}
-                          name="languages"
-                          value={language.name}
+                          checked={selectedLanguages.includes(language.name)}
+                          onChange={(e) => handleLanguageCheckbox(language.name, e.target.checked)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label htmlFor={`language_${language.id}`} className="ml-2 text-sm font-medium cursor-pointer">
@@ -383,16 +430,47 @@ export default function Home(_: Route.ComponentProps) {
                   </div>
                 )}
                 
+                {/* Selected languages display */}
+                {selectedLanguages.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedLanguages.map((language) => (
+                      <span key={language} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        {language}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLanguage(language)}
+                          className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 dark:hover:bg-blue-800 dark:hover:text-blue-300"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
                 {/* Add new language */}
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    id="new_language"
-                    name="languages"
+                    value={newLanguage}
+                    onChange={(e) => setNewLanguage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddLanguage())}
                     placeholder={homeContent.form.sections.information.fields.languages.placeholder}
                     className="flex-1 rounded-md border border-gray-300 bg-white p-2 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
+                  <button
+                    type="button"
+                    onClick={handleAddLanguage}
+                    className="px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  >
+                    {homeContent.form.sections.information.fields.languages.addButton}
+                  </button>
                 </div>
+                
+                {/* Hidden inputs for form submission */}
+                {selectedLanguages.map((language) => (
+                  <input key={language} type="hidden" name="languages" value={language} />
+                ))}
               </div>
             </div>
 
@@ -407,8 +485,8 @@ export default function Home(_: Route.ComponentProps) {
                         <input
                           type="checkbox"
                           id={`topic_${topic.id}`}
-                          name="topics"
-                          value={topic.name}
+                          checked={selectedTopics.includes(topic.name)}
+                          onChange={(e) => handleTopicCheckbox(topic.name, e.target.checked)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <label htmlFor={`topic_${topic.id}`} className="ml-2 text-sm font-medium cursor-pointer">
@@ -419,16 +497,47 @@ export default function Home(_: Route.ComponentProps) {
                   </div>
                 )}
                 
+                {/* Selected topics display */}
+                {selectedTopics.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTopics.map((topic) => (
+                      <span key={topic} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        {topic}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTopic(topic)}
+                          className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500 dark:hover:bg-green-800 dark:hover:text-green-300"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
                 {/* Add new topic */}
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    id="new_topic"
-                    name="topics"
+                    value={newTopic}
+                    onChange={(e) => setNewTopic(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTopic())}
                     placeholder={homeContent.form.sections.information.fields.topics.placeholder}
                     className="flex-1 rounded-md border border-gray-300 bg-white p-2 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
+                  <button
+                    type="button"
+                    onClick={handleAddTopic}
+                    className="px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    {homeContent.form.sections.information.fields.topics.addButton}
+                  </button>
                 </div>
+                
+                {/* Hidden inputs for form submission */}
+                {selectedTopics.map((topic) => (
+                  <input key={topic} type="hidden" name="topics" value={topic} />
+                ))}
               </div>
             </div>
           </div>
