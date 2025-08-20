@@ -231,6 +231,14 @@ export default function Home(_: Route.ComponentProps) {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   
+  // State to track if form was successfully submitted
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  // Check if form was successfully submitted
+  if (actionData?.ok && !isSubmitted) {
+    setIsSubmitted(true);
+  }
+  
   const handleAddLanguage = () => {
     const trimmed = newLanguage.trim();
     if (trimmed && !selectedLanguages.includes(trimmed)) {
@@ -275,18 +283,24 @@ export default function Home(_: Route.ComponentProps) {
     <main className="pt-16 p-4 container mx-auto max-w-2xl">
       <h1 className="text-3xl font-bold mb-4 text-center">{homeContent.page.title}</h1>
 
-      {actionData?.error && (
-        <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
-          {actionData.error}
+      {isSubmitted ? (
+        // Show success message when form is submitted
+        <div className="text-center">
+          <div className="mb-6 rounded-md border border-green-300 bg-green-50 p-6 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
+            <h2 className="text-2xl font-semibold mb-2">Thank you for registering!</h2>
+            <p className="text-lg">{homeContent.messages.success.saved}</p>
+          </div>
         </div>
-      )}
-      {actionData?.ok && (
-        <div className="mb-4 rounded-md border border-green-300 bg-green-50 p-3 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
-          {homeContent.messages.success.saved}
-        </div>
-      )}
+      ) : (
+        // Show form when not submitted
+        <>
+          {actionData?.error && (
+            <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
+              {actionData.error}
+            </div>
+          )}
 
-      <Form method="post" className="space-y-6">
+          <Form method="post" className="space-y-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.information.title}</h2>
           <div className="space-y-4">
@@ -575,8 +589,9 @@ export default function Home(_: Route.ComponentProps) {
             {homeContent.form.submit}
           </button>
         </div>
-      </Form>
-
+          </Form>
+        </>
+      )}
     </main>
   );
 }
