@@ -77,6 +77,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const dietary = String(formData.get("dietary") ?? "").trim();
   const dietaryOther = String(formData.get("dietary_other") ?? "").trim();
   const alcohol = formData.get("alcohol");
+  const researchConsentRaw = formData.get("research_consent");
   
   // Get languages and topics from form data
   const languages = formData.getAll("languages").map(String).filter(Boolean);
@@ -88,6 +89,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
   // Convert alcohol preference to boolean
   const alcoholPreference = alcohol === "yes";
+  // Convert research consent to boolean (unchecked => null => false)
+  const researchConsent = researchConsentRaw === "yes";
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -104,7 +107,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // Use D1's transaction API:
     const result = await REGISTRANTS.batch([
       // Insert the new registrant
-      REGISTRANTS.prepare("INSERT INTO registrants (name, email, dietary_preferences, dietary_other, alcohol_preference) VALUES (?1, ?2, ?3, ?4, ?5)").bind(name, email, dietary, dietaryOther, alcoholPreference)
+      REGISTRANTS.prepare("INSERT INTO registrants (name, email, dietary_preferences, dietary_other, alcohol_preference, research_consent) VALUES (?1, ?2, ?3, ?4, ?5, ?6)").bind(name, email, dietary, dietaryOther, alcoholPreference, researchConsent)
     ]);
     
     const newRegistrantId = result[0].meta?.last_row_id;
@@ -630,6 +633,17 @@ export default function Home(_: Route.ComponentProps) {
         <p className="mt-3 text-xs text-gray-600 dark:text-gray-400 text-center">
           {homeContent.form.disclaimer}
         </p>
+        <div className="mt-4 flex items-start justify-center">
+          <label className="inline-flex items-start text-sm text-gray-700 dark:text-gray-300">
+            <input
+              type="checkbox"
+              name="research_consent"
+              value="yes"
+              className="mt-0.5 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <span className="ml-2">{homeContent.form.researchConsent.label}</span>
+          </label>
+        </div>
           </Form>
         </>
       )}
