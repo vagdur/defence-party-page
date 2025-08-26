@@ -181,7 +181,7 @@ export const homeContent: HomeContent = {
     submit: "Register for Party",
     disclaimer: "By submitting, you approve the use of your data for assigning seating at the party, as well as the display of anonymized data at the presentation at the defence.",
     researchConsent: {
-      label: "I consent to my social network data being released in anonymized form for research."
+      label: "I additionally consent to my social network data being released in anonymized form for research."
     }
   }
 };
