@@ -459,6 +459,7 @@ export default function Home(_: Route.ComponentProps) {
                   </label>
                 </div>
               </div>
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{homeContent.form.sections.information.fields.alcohol.note}</p>
             </div>
 
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-6">

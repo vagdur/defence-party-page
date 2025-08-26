@@ -49,6 +49,7 @@ export interface HomeContent {
             label: string;
             yes: string;
             no: string;
+            note: string;
           };
           languages: {
             label: string;
@@ -130,7 +131,8 @@ export const homeContent: HomeContent = {
           alcohol: {
             label: "Do you want alcohol?",
             yes: "Yes",
-            no: "No"
+            no: "No",
+            note: "Alcohol costs 75:- extra."
           },
           languages: {
             label: "Languages you are comfortable having a conversation in",
