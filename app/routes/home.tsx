@@ -627,6 +627,9 @@ export default function Home(_: Route.ComponentProps) {
             {homeContent.form.submit}
           </button>
         </div>
+        <p className="mt-3 text-xs text-gray-600 dark:text-gray-400 text-center">
+          {homeContent.form.disclaimer}
+        </p>
           </Form>
         </>
       )}

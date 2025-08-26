@@ -66,6 +66,7 @@ export interface HomeContent {
       };
     };
     submit: string;
+    disclaimer: string;
   };
 }
 
@@ -136,6 +137,7 @@ export const homeContent: HomeContent = {
         }
       }
     },
-    submit: "Register for Party"
+    submit: "Register for Party",
+    disclaimer: "By submitting, you approve the use of your data for assigning seating at the party, as well as the display of anonymized data at the presentation at the defence."
   }
 };
