@@ -72,7 +72,9 @@ export async function loader({ context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const { REGISTRANTS } = context.cloudflare.env;
   const formData = await request.formData();
-  const name = String(formData.get("name") ?? "").trim();
+  const firstName = String(formData.get("first_name") ?? "").trim();
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim();
   const email = String(formData.get("email") ?? "").trim();
   const dietary = String(formData.get("dietary") ?? "").trim();
   const dietaryOther = String(formData.get("dietary_other") ?? "").trim();
@@ -83,7 +85,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const languages = formData.getAll("languages").map(String).filter(Boolean);
   const topics = formData.getAll("topics").map(String).filter(Boolean);
   
-  if (!name || !email || !dietary || !alcohol) {
+  if (!firstName || !lastName || !email || !dietary || !alcohol) {
     return { ok: false, error: homeContent.messages.error.validation };
   }
 
@@ -334,10 +336,20 @@ export default function Home(_: Route.ComponentProps) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium mb-1">{homeContent.form.sections.information.fields.name.label}</label>
+                <label htmlFor="first_name" className="block text-sm font-medium mb-1">{homeContent.form.sections.information.fields.firstName.label}</label>
                 <input 
-                  id="name" 
-                  name="name" 
+                  id="first_name" 
+                  name="first_name" 
+                  type="text" 
+                  required 
+                  className="w-full rounded-md border border-gray-300 bg-white p-3 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                />
+              </div>
+              <div>
+                <label htmlFor="last_name" className="block text-sm font-medium mb-1">{homeContent.form.sections.information.fields.lastName.label}</label>
+                <input 
+                  id="last_name" 
+                  name="last_name" 
                   type="text" 
                   required 
                   className="w-full rounded-md border border-gray-300 bg-white p-3 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 

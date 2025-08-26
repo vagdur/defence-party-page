@@ -26,7 +26,10 @@ export interface HomeContent {
           social: string;
         };
         fields: {
-          name: {
+          firstName: {
+            label: string;
+          };
+          lastName: {
             label: string;
           };
           email: {
@@ -88,7 +91,7 @@ export const homeContent: HomeContent = {
   },
   messages: {
     error: {
-      validation: "Please provide name, email, dietary preferences, and alcohol preference.",
+      validation: "Please provide first name, last name, email, dietary preferences, and alcohol preference.",
       save: "Failed to save. Please try again.",
       load: "Failed to load registrants"
     },
@@ -105,8 +108,11 @@ export const homeContent: HomeContent = {
           social: "Social network data",
         },
         fields: {
-          name: {
-            label: "Name"
+          firstName: {
+            label: "First name"
+          },
+          lastName: {
+            label: "Last name"
           },
           email: {
             label: "Email"
