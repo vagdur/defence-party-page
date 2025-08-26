@@ -12,6 +12,9 @@ export interface HomeContent {
       validation: string;
       save: string;
       load: string;
+      duplicateName: string;
+      duplicateEmail: string;
+      duplicateNameAndEmail: string;
     };
     success: {
       saved: string;
@@ -105,7 +108,10 @@ export const homeContent: HomeContent = {
     error: {
       validation: "Please provide first name, last name, email, dietary preferences, and alcohol preference.",
       save: "Failed to save. Please try again.",
-      load: "Failed to load registrants"
+      load: "Failed to load registrants",
+      duplicateName: "A registrant with this name already exists.",
+      duplicateEmail: "A registrant with this email address already exists.",
+      duplicateNameAndEmail: "A registrant with this name and email address already exists."
     },
     success: {
       saved: "Saved! Thank you for registering."
