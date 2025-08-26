@@ -19,7 +19,7 @@ export async function loader({ context }: Route.LoaderArgs) {
         "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, dietary_preferences TEXT NOT NULL, dietary_other TEXT, alcohol_preference BOOLEAN NOT NULL, created_at TEXT DEFAULT (datetime('now')))"
       ),
       REGISTRANTS.prepare(
-        "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, knows_person BOOLEAN NOT NULL, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
+        "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, familiarity INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
       ),
       REGISTRANTS.prepare(
         "CREATE TABLE IF NOT EXISTS languages (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, created_at TEXT DEFAULT (datetime('now')))"
@@ -199,14 +199,21 @@ export async function action({ request, context }: Route.ActionArgs) {
       .bind(newRegistrantId)
       .all<{ id: number }>();
     
-    // Prepare relationship insert statements
+    // Prepare relationship insert statements (slider 0-100 familiarity)
     const relationshipStatements = (existingRegistrants ?? []).map((registrant: { id: number }) => {
-      const knowsKey = `knows_${registrant.id}`;
-      const knowsPerson = formData.get(knowsKey) === "on";
+      const familiarityKey = `familiarity_${registrant.id}`;
+      const rawValue = formData.get(familiarityKey);
+      let familiarity = 0;
+      if (typeof rawValue === "string" && rawValue.trim() !== "") {
+        const parsed = Number(rawValue);
+        if (!Number.isNaN(parsed)) {
+          familiarity = Math.min(100, Math.max(0, Math.floor(parsed)));
+        }
+      }
       
       return REGISTRANTS
-        .prepare("INSERT INTO relationships (new_registrant_id, known_registrant_id, knows_person) VALUES (?1, ?2, ?3)")
-        .bind(newRegistrantId, registrant.id, knowsPerson ? 1 : 0);
+        .prepare("INSERT INTO relationships (new_registrant_id, known_registrant_id, familiarity) VALUES (?1, ?2, ?3)")
+        .bind(newRegistrantId, registrant.id, familiarity);
     });
     
     // Execute all relationship inserts in a batch if there are any
@@ -565,16 +572,29 @@ export default function Home(_: Route.ComponentProps) {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {data.registrants.map((registrant) => (
-                <div key={registrant.id} className="flex items-center space-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                <div key={registrant.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <div className="text-sm font-medium mb-2">{registrant.name}</div>
                   <input
-                    type="checkbox"
-                    id={`knows_${registrant.id}`}
-                    name={`knows_${registrant.id}`}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    type="range"
+                    id={`familiarity_${registrant.id}`}
+                    name={`familiarity_${registrant.id}`}
+                    min={0}
+                    max={100}
+                    step={1}
+                    defaultValue={0}
+                    className="w-full"
+                    list={`familiarity_marks_${registrant.id}`}
                   />
-                  <label htmlFor={`knows_${registrant.id}`} className="text-sm font-medium cursor-pointer">
-                    {registrant.name}
-                  </label>
+                  <datalist id={`familiarity_marks_${registrant.id}`}>
+                    <option value="0" label="0" />
+                    <option value="50" label="50" />
+                    <option value="100" label="100" />
+                  </datalist>
+                  <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    <span>{homeContent.form.sections.relationships.scale.left}</span>
+                    <span>{homeContent.form.sections.relationships.scale.middle}</span>
+                    <span>{homeContent.form.sections.relationships.scale.right}</span>
+                  </div>
                 </div>
               ))}
             </div>
