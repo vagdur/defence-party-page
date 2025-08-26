@@ -19,7 +19,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     // Ensure tables exist using batch operations
     await REGISTRANTS.batch([
       REGISTRANTS.prepare(
-        "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, dietary_preferences TEXT NOT NULL, dietary_other TEXT, alcohol_preference BOOLEAN NOT NULL, created_at TEXT DEFAULT (datetime('now')))"
+        "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL, dietary_preferences TEXT NOT NULL, dietary_other TEXT, alcohol_preference BOOLEAN NOT NULL, research_consent BOOLEAN DEFAULT FALSE, created_at TEXT DEFAULT (datetime('now')))"
       ),
       REGISTRANTS.prepare(
         "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, familiarity INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
