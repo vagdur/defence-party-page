@@ -329,6 +329,9 @@ export default function Home(_: Route.ComponentProps) {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.information.title}</h2>
           <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-2">
+              {homeContent.form.sections.information.subheadings?.personal}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-1">{homeContent.form.sections.information.fields.name.label}</label>
@@ -446,6 +449,9 @@ export default function Home(_: Route.ComponentProps) {
               </div>
             </div>
 
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-6">
+              {homeContent.form.sections.information.subheadings?.social}
+            </h3>
             <div>
               <label className="block text-sm font-medium mb-2">{homeContent.form.sections.information.fields.languages.label}</label>
               <div className="space-y-3">

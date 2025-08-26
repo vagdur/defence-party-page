@@ -21,6 +21,10 @@ export interface HomeContent {
     sections: {
       information: {
         title: string;
+        subheadings?: {
+          personal: string;
+          social: string;
+        };
         fields: {
           name: {
             label: string;
@@ -96,6 +100,10 @@ export const homeContent: HomeContent = {
     sections: {
       information: {
         title: "Your Information",
+        subheadings: {
+          personal: "Personal data",
+          social: "Social network data",
+        },
         fields: {
           name: {
             label: "Name"
