@@ -285,6 +285,21 @@ export default function Home(_: Route.ComponentProps) {
       setSelectedTopics(selectedTopics.filter((t: string) => t !== topic));
     }
   };
+
+  const updateSliderGradient = (inputEl: HTMLInputElement) => {
+    const min = Number(inputEl.min || 0);
+    const max = Number(inputEl.max || 100);
+    const value = Number(inputEl.value || 0);
+    const percent = ((value - min) / (max - min)) * 100;
+    inputEl.style.backgroundImage = "linear-gradient(90deg, #3b82f6 0%, #f59e0b 100%)"; // blue → orange
+    inputEl.style.backgroundSize = `${percent}% 100%`;
+    inputEl.style.backgroundRepeat = "no-repeat";
+    inputEl.style.backgroundColor = "#e5e7eb"; // gray-200 for unfilled track
+  };
+
+  const handleSliderInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    updateSliderGradient(e.target);
+  };
   
   return (
     <main className="pt-16 p-4 container mx-auto max-w-2xl">
@@ -570,7 +585,7 @@ export default function Home(_: Route.ComponentProps) {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {homeContent.form.sections.relationships.description}
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="space-y-3">
               {data.registrants.map((registrant) => (
                 <div key={registrant.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
                   <div className="text-sm font-medium mb-2">{registrant.name}</div>
@@ -582,7 +597,10 @@ export default function Home(_: Route.ComponentProps) {
                     max={100}
                     step={1}
                     defaultValue={0}
-                    className="w-full"
+                    className="w-full h-2 rounded appearance-none"
+                    style={{ backgroundImage: "linear-gradient(90deg, #3b82f6 0%, #f59e0b 100%)", backgroundSize: "0% 100%", backgroundRepeat: "no-repeat", backgroundColor: "#e5e7eb" }}
+                    onChange={handleSliderInput}
+                    onInput={handleSliderInput}
                     list={`familiarity_marks_${registrant.id}`}
                   />
                   <datalist id={`familiarity_marks_${registrant.id}`}>
