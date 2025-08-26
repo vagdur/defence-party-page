@@ -11,14 +11,15 @@ export const paymentConfig = {
 
 export function buildSwishUrl(): string {
   const { phoneNumber, amount, currency, message, allowEditAmount, source } = paymentConfig.swish;
-  const params = new URLSearchParams({
-    sw: phoneNumber,
-    amt: amount.toString(),
-    cur: currency,
-    msg: message,
-    edit: allowEditAmount ? "amt" : "",
-    src: source
-  });
   
-  return `https://app.swish.nu/1/p/sw/?${params.toString()}`;
+  const params = [
+    `sw=${encodeURIComponent(phoneNumber)}`,
+    `amt=${encodeURIComponent(amount.toString())}`,
+    `cur=${encodeURIComponent(currency)}`,
+    `msg=${encodeURIComponent(message)}`,
+    `edit=${encodeURIComponent(allowEditAmount ? "amt" : "")}`,
+    `src=${encodeURIComponent(source)}`
+  ].join('&');
+  
+  return `https://app.swish.nu/1/p/sw/?${params}`;
 }
