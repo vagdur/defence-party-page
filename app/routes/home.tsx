@@ -1,7 +1,10 @@
 import type { Route } from "./+types/home";
 import { Form, useActionData, useLoaderData } from "react-router";
 import { homeContent } from "../content/home";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import QRCode from "react-qr-code";
+import swishLogo from "../assets/swish_logo.png";
+import { buildSwishUrl, paymentConfig } from "../config/payment";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -245,6 +248,17 @@ export default function Home(_: Route.ComponentProps) {
   
   // State to track if form was successfully submitted
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if user is on mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Check if form was successfully submitted
   if (actionData?.ok && !isSubmitted) {
@@ -316,6 +330,53 @@ export default function Home(_: Route.ComponentProps) {
           <div className="mb-6 rounded-md border border-green-300 bg-green-50 p-6 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-200">
             <h2 className="text-2xl font-semibold mb-2">Thank you for registering!</h2>
             <p className="text-lg">{homeContent.messages.success.saved}</p>
+          </div>
+          <div className="mx-auto w-full max-w-xs">
+            {isMobile ? (
+              <>
+                <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">{homeContent.payment.title}:</div>
+                <a 
+                  href={buildSwishUrl()} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                >
+                  {homeContent.payment.mobile.buttonText}
+                </a>
+                <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+                  {homeContent.payment.mobile.fallbackText
+                    .replace('{amount}', paymentConfig.swish.amount.toString())
+                    .replace('{currency}', paymentConfig.swish.currency)
+                    .replace('{phoneNumber}', paymentConfig.swish.phoneNumber)
+                  }
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">{homeContent.payment.desktop.title}</div>
+                <div className="relative inline-block">
+                  <QRCode
+                    value={buildSwishUrl()}
+                    size={224}
+                    style={{ borderRadius: 12 }}
+                    bgColor={"#ffffff"}
+                    fgColor={"#000000"}
+                  />
+                  <img
+                    src={swishLogo}
+                    alt="Swish"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 rounded-md bg-white p-1 shadow"
+                  />
+                </div>
+                <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+                  {homeContent.payment.desktop.fallbackText
+                    .replace('{amount}', paymentConfig.swish.amount.toString())
+                    .replace('{currency}', paymentConfig.swish.currency)
+                    .replace('{phoneNumber}', paymentConfig.swish.phoneNumber)
+                  }
+                </div>
+              </>
+            )}
           </div>
         </div>
       ) : (

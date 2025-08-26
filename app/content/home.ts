@@ -17,6 +17,17 @@ export interface HomeContent {
       saved: string;
     };
   };
+  payment: {
+    title: string;
+    mobile: {
+      buttonText: string;
+      fallbackText: string;
+    };
+    desktop: {
+      title: string;
+      fallbackText: string;
+    };
+  };
   form: {
     sections: {
       information: {
@@ -98,6 +109,17 @@ export const homeContent: HomeContent = {
     },
     success: {
       saved: "Saved! Thank you for registering."
+    }
+  },
+  payment: {
+    title: "Pay for the meal via Swish",
+    mobile: {
+      buttonText: "Open Swish Payment",
+      fallbackText: "Or send {amount} {currency} to {phoneNumber} via Swish"
+    },
+    desktop: {
+      title: "Pay for the meal via Swish by scanning the QR code:",
+      fallbackText: "Or send {amount} {currency} to {phoneNumber} via Swish"
     }
   },
   form: {
