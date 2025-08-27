@@ -160,7 +160,7 @@ export const homeContent: HomeContent = {
             label: "Do you want alcohol?",
             yes: "Yes",
             no: "No",
-            note: "Alcohol costs 75:- extra."
+            note: "Alcohol costs {alcoholCost}:- extra."
           },
           languages: {
             label: "Languages you are comfortable having a conversation in",

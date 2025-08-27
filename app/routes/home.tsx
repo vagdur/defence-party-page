@@ -265,6 +265,9 @@ export default function Home(_: Route.ComponentProps) {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   
+  // State to track alcohol preference
+  const [alcoholPreference, setAlcoholPreference] = useState(false);
+  
   // State to track if form was successfully submitted
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -355,7 +358,7 @@ export default function Home(_: Route.ComponentProps) {
               <>
                 <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">{homeContent.payment.title}:</div>
                 <a 
-                  href={buildSwishUrl()} 
+                  href={buildSwishUrl(alcoholPreference)} 
                   target="_blank" 
                   rel="noreferrer"
                   className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
@@ -364,7 +367,7 @@ export default function Home(_: Route.ComponentProps) {
                 </a>
                 <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
                   {homeContent.payment.mobile.fallbackText
-                    .replace('{amount}', paymentConfig.swish.amount.toString())
+                    .replace('{amount}', (paymentConfig.swish.amount + (alcoholPreference ? paymentConfig.swish.alcoholCost : 0)).toString())
                     .replace('{currency}', paymentConfig.swish.currency)
                     .replace('{phoneNumber}', paymentConfig.swish.phoneNumber)
                   }
@@ -375,7 +378,7 @@ export default function Home(_: Route.ComponentProps) {
                 <div className="mb-3 text-sm text-gray-700 dark:text-gray-300">{homeContent.payment.desktop.title}</div>
                 <div className="relative inline-block">
                   <QRCode
-                    value={buildSwishUrl()}
+                    value={buildSwishUrl(alcoholPreference)}
                     size={224}
                     style={{ borderRadius: 12 }}
                     bgColor={"#ffffff"}
@@ -389,7 +392,7 @@ export default function Home(_: Route.ComponentProps) {
                 </div>
                 <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
                   {homeContent.payment.desktop.fallbackText
-                    .replace('{amount}', paymentConfig.swish.amount.toString())
+                    .replace('{amount}', (paymentConfig.swish.amount + (alcoholPreference ? paymentConfig.swish.alcoholCost : 0)).toString())
                     .replace('{currency}', paymentConfig.swish.currency)
                     .replace('{phoneNumber}', paymentConfig.swish.phoneNumber)
                   }
@@ -520,6 +523,8 @@ export default function Home(_: Route.ComponentProps) {
                     name="alcohol" 
                     value="yes" 
                     required 
+                    checked={alcoholPreference}
+                    onChange={() => setAlcoholPreference(true)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
                   <label htmlFor="alcohol_yes" className="ml-2 text-sm font-medium cursor-pointer">
@@ -532,6 +537,8 @@ export default function Home(_: Route.ComponentProps) {
                     id="alcohol_no" 
                     name="alcohol" 
                     value="no" 
+                    checked={!alcoholPreference}
+                    onChange={() => setAlcoholPreference(false)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
                   <label htmlFor="alcohol_no" className="ml-2 text-sm font-medium cursor-pointer">
@@ -539,7 +546,9 @@ export default function Home(_: Route.ComponentProps) {
                   </label>
                 </div>
               </div>
-              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{homeContent.form.sections.information.fields.alcohol.note}</p>
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                {homeContent.form.sections.information.fields.alcohol.note.replace('{alcoholCost}', paymentConfig.swish.alcoholCost.toString())}
+              </p>
             </div>
 
             <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-6">
