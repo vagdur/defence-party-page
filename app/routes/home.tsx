@@ -407,10 +407,7 @@ export default function Home(_: Route.ComponentProps) {
           <Form method="post" className="space-y-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.information.title}</h2>
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-2">
-              {homeContent.form.sections.information.subheadings?.personal}
-            </h3>
+            <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="first_name" className="block text-sm font-medium mb-1">{homeContent.form.sections.information.fields.firstName.label}</label>
@@ -545,9 +542,16 @@ export default function Home(_: Route.ComponentProps) {
               </p>
             </div>
 
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-6">
-              {homeContent.form.sections.information.subheadings?.social}
-            </h3>
+
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.relationships.title}</h2>
+          
+          {/* Languages Section */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-3">{homeContent.form.sections.relationships.subsections.languages}</h3>
             <div>
               <label className="block text-sm font-medium mb-2">{homeContent.form.sections.information.fields.languages.label}</label>
               <div className="space-y-3">
@@ -614,7 +618,11 @@ export default function Home(_: Route.ComponentProps) {
                 ))}
               </div>
             </div>
+          </div>
 
+          {/* Topics Section */}
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-3">{homeContent.form.sections.relationships.subsections.topics}</h3>
             <div>
               <label className="block text-sm font-medium mb-2">{homeContent.form.sections.information.fields.topics.label}</label>
               <div className="space-y-3">
@@ -682,47 +690,48 @@ export default function Home(_: Route.ComponentProps) {
               </div>
             </div>
           </div>
-        </div>
 
-        {data.registrants.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.relationships.title}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {homeContent.form.sections.relationships.description}
-            </p>
-            <div className="space-y-3">
-              {data.registrants.map((registrant: { id: number; name: string }) => (
-                <div key={registrant.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <div className="text-sm font-medium mb-2">{registrant.name}</div>
-                  <input
-                    type="range"
-                    id={`familiarity_${registrant.id}`}
-                    name={`familiarity_${registrant.id}`}
-                    min={0}
-                    max={100}
-                    step={1}
-                    defaultValue={0}
-                    className="w-full h-2 rounded appearance-none"
-                    style={{ backgroundImage: "linear-gradient(90deg, #3b82f6 0%, #f59e0b 100%)", backgroundSize: "0% 100%", backgroundRepeat: "no-repeat", backgroundColor: "#e5e7eb" }}
-                    onChange={handleSliderInput}
-                    onInput={handleSliderInput}
-                    list={`familiarity_marks_${registrant.id}`}
-                  />
-                  <datalist id={`familiarity_marks_${registrant.id}`}>
-                    <option value="0" label="0" />
-                    <option value="50" label="50" />
-                    <option value="100" label="100" />
-                  </datalist>
-                  <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
-                    <span>{homeContent.form.sections.relationships.scale.left}</span>
-                    <span>{homeContent.form.sections.relationships.scale.middle}</span>
-                    <span>{homeContent.form.sections.relationships.scale.right}</span>
+          {/* Relationships Section */}
+          {data.registrants.length > 0 && (
+            <div>
+              <h3 className="text-lg font-medium mb-3">{homeContent.form.sections.relationships.subsections.familiarity}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {homeContent.form.sections.relationships.description}
+              </p>
+              <div className="space-y-3">
+                {data.registrants.map((registrant: { id: number; name: string }) => (
+                  <div key={registrant.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <div className="text-sm font-medium mb-2">{registrant.name}</div>
+                    <input
+                      type="range"
+                      id={`familiarity_${registrant.id}`}
+                      name={`familiarity_${registrant.id}`}
+                      min={0}
+                      max={100}
+                      step={1}
+                      defaultValue={0}
+                      className="w-full h-2 rounded appearance-none"
+                      style={{ backgroundImage: "linear-gradient(90deg, #3b82f6 0%, #f59e0b 100%)", backgroundSize: "0% 100%", backgroundRepeat: "no-repeat", backgroundColor: "#e5e7eb" }}
+                      onChange={handleSliderInput}
+                      onInput={handleSliderInput}
+                      list={`familiarity_marks_${registrant.id}`}
+                    />
+                    <datalist id={`familiarity_marks_${registrant.id}`}>
+                      <option value="0" label="0" />
+                      <option value="50" label="50" />
+                      <option value="100" label="100" />
+                    </datalist>
+                    <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      <span>{homeContent.form.sections.relationships.scale.left}</span>
+                      <span>{homeContent.form.sections.relationships.scale.middle}</span>
+                      <span>{homeContent.form.sections.relationships.scale.right}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="text-center">
           <button 

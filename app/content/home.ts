@@ -80,6 +80,11 @@ export interface HomeContent {
       relationships: {
         title: string;
         description: string;
+        subsections: {
+          languages: string;
+          topics: string;
+          familiarity: string;
+        };
         scale: {
           left: string;
           middle: string;
@@ -175,8 +180,13 @@ export const homeContent: HomeContent = {
         }
       },
       relationships: {
-        title: "Do you know these people?",
+        title: "Social Network & Interests",
         description: "Check the boxes for people you know. This helps us understand the social connections at the party!",
+        subsections: {
+          languages: "Languages",
+          topics: "Discussion Topics",
+          familiarity: "Familiarity with Other Participants"
+        },
         scale: {
           left: "I don't know this person",
           middle: "An acquaintance",
