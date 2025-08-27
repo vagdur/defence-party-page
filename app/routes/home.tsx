@@ -404,12 +404,6 @@ export default function Home(_: Route.ComponentProps) {
       ) : (
         // Show form when not submitted
         <>
-          {actionData?.error && (
-            <div className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
-              {actionData.error}
-            </div>
-          )}
-
           <Form method="post" className="space-y-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.information.title}</h2>
@@ -738,6 +732,13 @@ export default function Home(_: Route.ComponentProps) {
             {homeContent.form.submit}
           </button>
         </div>
+        
+        {actionData?.error && (
+          <div className="mt-4 rounded-md border border-red-300 bg-red-50 p-3 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
+            {actionData.error}
+          </div>
+        )}
+        
         <p className="mt-3 text-xs text-gray-600 dark:text-gray-400 text-center">
           {homeContent.form.disclaimer}
         </p>
