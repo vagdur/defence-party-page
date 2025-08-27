@@ -43,17 +43,17 @@ export async function loader({ context }: Route.LoaderArgs) {
         .prepare(
           "SELECT id, name FROM registrants ORDER BY name ASC"
         )
-        .all<{ id: number; name: string }>(),
+        .all(),
       REGISTRANTS
         .prepare(
           "SELECT id, name FROM languages ORDER BY name ASC"
         )
-        .all<{ id: number; name: string }>(),
+        .all(),
       REGISTRANTS
         .prepare(
           "SELECT id, name FROM topics ORDER BY name ASC"
         )
-        .all<{ id: number; name: string }>()
+        .all()
     ]);
     
     return { 
@@ -183,7 +183,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         const { results: languageResults } = await REGISTRANTS
           .prepare("SELECT id FROM languages WHERE name = ?")
           .bind(trimmedLanguage)
-          .all<{ id: number }>();
+          .all();
         
         if (languageResults && languageResults.length > 0) {
           registrantLanguageStatements.push(
@@ -201,7 +201,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         const { results: topicResults } = await REGISTRANTS
           .prepare("SELECT id FROM topics WHERE name = ?")
           .bind(trimmedTopic)
-          .all<{ id: number }>();
+          .all();
         
         if (topicResults && topicResults.length > 0) {
           registrantTopicStatements.push(
@@ -224,7 +224,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const { results: existingRegistrants } = await REGISTRANTS
       .prepare("SELECT id FROM registrants WHERE id != ? ORDER BY id")
       .bind(newRegistrantId)
-      .all<{ id: number }>();
+      .all();
     
     // Prepare relationship insert statements (slider 0-100 familiarity)
     const relationshipStatements = (existingRegistrants ?? []).map((registrant: { id: number }) => {
@@ -560,7 +560,7 @@ export default function Home(_: Route.ComponentProps) {
                 {/* Existing languages */}
                 {data.languages.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {data.languages.map((language) => (
+                    {data.languages.map((language: { id: number; name: string }) => (
                       <div key={language.id} className="flex items-center">
                         <input
                           type="checkbox"
@@ -627,7 +627,7 @@ export default function Home(_: Route.ComponentProps) {
                 {/* Existing topics */}
                 {data.topics.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {data.topics.map((topic) => (
+                    {data.topics.map((topic: { id: number; name: string }) => (
                       <div key={topic.id} className="flex items-center">
                         <input
                           type="checkbox"
@@ -697,7 +697,7 @@ export default function Home(_: Route.ComponentProps) {
               {homeContent.form.sections.relationships.description}
             </p>
             <div className="space-y-3">
-              {data.registrants.map((registrant) => (
+              {data.registrants.map((registrant: { id: number; name: string }) => (
                 <div key={registrant.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
                   <div className="text-sm font-medium mb-2">{registrant.name}</div>
                   <input
