@@ -438,7 +438,7 @@ export default function Home(_: Route.ComponentProps) {
                   className="w-full rounded-md border border-gray-300 bg-white p-3 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                 />
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <label htmlFor="email" className="block text-sm font-medium mb-1">{homeContent.form.sections.information.fields.email.label}</label>
                 <input 
                   id="email" 
