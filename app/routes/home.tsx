@@ -7,6 +7,34 @@ import swishLogo from "../assets/swish_logo.png";
 import { buildSwishUrl, paymentConfig } from "../config/payment";
 import { getPriorityFromCode, getSeatsInTier } from "../config/seats";
 
+// Input sanitization utility functions
+function sanitizeString(input: string | null | undefined, maxLength: number = 255): string {
+  if (!input) return "";
+  return String(input)
+    .trim()
+    .replace(/[<>]/g, "") // Remove potential HTML tags
+    .substring(0, maxLength);
+}
+
+function sanitizeEmail(input: string | null | undefined): string {
+  if (!input) return "";
+  return String(input).trim().toLowerCase();
+}
+
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email) && email.length <= 254;
+}
+
+function sanitizeLanguageOrTopic(input: string | null | undefined, maxLength: number = 100): string {
+  if (!input) return "";
+  return String(input)
+    .trim()
+    .replace(/[<>]/g, "") // Remove potential HTML tags
+    .replace(/[^\w\s\-.,()]/g, "") // Only allow alphanumeric, spaces, hyphens, dots, commas, parentheses
+    .substring(0, maxLength);
+}
+
 export function meta({}: Route.MetaArgs) {
   return [
     { title: homeContent.meta.title },
@@ -17,7 +45,7 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { REGISTRANTS } = context.cloudflare.env;
   const url = new URL(request.url);
-  const invitationCode = url.searchParams.get('c');
+  const invitationCode = sanitizeString(url.searchParams.get('c'), 10); // Limit invitation code length
   
   try {
     // Ensure tables exist using batch operations
@@ -135,20 +163,20 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const { REGISTRANTS } = context.cloudflare.env;
   const formData = await request.formData();
-  const firstName = String(formData.get("first_name") ?? "").trim();
-  const lastName = String(formData.get("last_name") ?? "").trim();
+  const firstName = sanitizeString(String(formData.get("first_name") ?? ""));
+  const lastName = sanitizeString(String(formData.get("last_name") ?? ""));
   const name = [firstName, lastName].filter(Boolean).join(" ").trim();
-  const email = String(formData.get("email") ?? "").trim();
-  const dietary = String(formData.get("dietary") ?? "").trim();
-  const dietaryOther = String(formData.get("dietary_other") ?? "").trim();
+  const email = sanitizeEmail(String(formData.get("email") ?? ""));
+  const dietary = sanitizeString(String(formData.get("dietary") ?? ""));
+  const dietaryOther = sanitizeString(String(formData.get("dietary_other") ?? ""));
   const alcohol = formData.get("alcohol");
   const researchConsentRaw = formData.get("research_consent");
   let userPriority = Number(formData.get('priority') ?? 0);
   const originalPriority = Number(formData.get('original_priority') ?? 0);
   
   // Get languages and topics from form data
-  const languages = formData.getAll("languages").map(String).filter(Boolean);
-  const topics = formData.getAll("topics").map(String).filter(Boolean);
+  const languages = formData.getAll("languages").map(String).map(sanitizeLanguageOrTopic).filter(Boolean);
+  const topics = formData.getAll("topics").map(String).map(sanitizeLanguageOrTopic).filter(Boolean);
   
   if (!firstName || !lastName || !email || !dietary || !alcohol) {
     return { ok: false, error: homeContent.messages.error.validation };
@@ -160,8 +188,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const researchConsent = researchConsentRaw === "yes";
 
   // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
+  if (!validateEmail(email)) {
     return { ok: false, error: "Please provide a valid email address." };
   }
 
@@ -247,7 +274,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // Process languages
     const languageStatements = [];
     for (const languageName of languages) {
-      const trimmedLanguage = languageName.trim();
+      const trimmedLanguage = sanitizeLanguageOrTopic(languageName);
       if (trimmedLanguage) {
         // Try to insert the language (will fail if it already exists due to UNIQUE constraint)
         languageStatements.push(
@@ -259,7 +286,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // Process topics
     const topicStatements = [];
     for (const topicName of topics) {
-      const trimmedTopic = topicName.trim();
+      const trimmedTopic = sanitizeLanguageOrTopic(topicName);
       if (trimmedTopic) {
         // Try to insert the topic (will fail if it already exists due to UNIQUE constraint)
         topicStatements.push(
@@ -281,7 +308,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const registrantTopicStatements = [];
     
     for (const languageName of languages) {
-      const trimmedLanguage = languageName.trim();
+      const trimmedLanguage = sanitizeLanguageOrTopic(languageName);
       if (trimmedLanguage) {
         // Get the language ID
         const { results: languageResults } = await REGISTRANTS
@@ -299,7 +326,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
     
     for (const topicName of topics) {
-      const trimmedTopic = topicName.trim();
+      const trimmedTopic = sanitizeLanguageOrTopic(topicName);
       if (trimmedTopic) {
         // Get the topic ID
         const { results: topicResults } = await REGISTRANTS
