@@ -197,7 +197,7 @@ export const homeContent: HomeContent = {
       },
       relationships: {
         title: "Social Network & Interests",
-        description: "Check the boxes for people you know. This helps us understand the social connections at the party!",
+        description: "It wouldn't be a defence party for a graph theory PhD without a few graphs. Please use these sliders to indicate how well you know the other participants - we will then use this information to assign seating at the party! (You may or may not be forced to listen to an explanation of the algorithm I used for this.)",
         subsections: {
           languages: "Languages",
           topics: "Discussion Topics",
