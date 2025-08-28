@@ -1,4 +1,4 @@
-import type { Route } from "./+types/admin";
+import type { Route } from "./+types/admin.js";
 import { useLoaderData } from "react-router";
 import { seatConfig, getMaxSeatsForPriority } from "../config/seats";
 
