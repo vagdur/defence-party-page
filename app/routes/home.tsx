@@ -63,6 +63,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     let effectivePriority = userPriority;
     if (seatsAvailable <= 0) {
       // Check each lower priority tier for availability
+      let foundAvailableTier = false;
       for (let checkPriority = userPriority - 1; checkPriority >= 0; checkPriority--) {
         const { results: lowerTierCount } = await REGISTRANTS
           .prepare(`
@@ -78,8 +79,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
         
         if (lowerTierSeats < lowerTierMax) {
           effectivePriority = checkPriority;
+          foundAvailableTier = true;
           break;
         }
+      }
+      
+      // If no lower tier is available, mark as fully booked
+      if (!foundAvailableTier) {
+        effectivePriority = -1;
       }
     }
 
