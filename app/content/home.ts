@@ -23,10 +23,16 @@ export interface HomeContent {
       duplicateName: string;
       duplicateEmail: string;
       duplicateNameAndEmail: string;
+      fullyBooked: string;
     };
     success: {
       saved: string;
     };
+  };
+  fullyBooked: {
+    title: string;
+    message: string;
+    contactInfo: string;
   };
   payment: {
     title: string;
@@ -132,11 +138,17 @@ export const homeContent: HomeContent = {
       load: "Failed to load registrants",
       duplicateName: "A registrant with this name already exists.",
       duplicateEmail: "A registrant with this email address already exists.",
-      duplicateNameAndEmail: "A registrant with this name and email address already exists."
+      duplicateNameAndEmail: "A registrant with this name and email address already exists.",
+      fullyBooked: "Sorry, this event is now fully booked."
     },
     success: {
       saved: "Saved! Thank you for registering."
     }
+  },
+  fullyBooked: {
+    title: "Fully Booked",
+    message: "We're sorry, but all seats for this event have been reserved.",
+    contactInfo: "Please contact the organizer if you'd like to be added to the waitlist."
   },
   payment: {
     title: "Pay for the meal via Swish",

@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import QRCode from "react-qr-code";
 import swishLogo from "../assets/swish_logo.png";
 import { buildSwishUrl, paymentConfig } from "../config/payment";
+import { getPriorityFromCode, getMaxSeatsForPriority } from "../config/seats";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -13,13 +14,16 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ context, request }: Route.LoaderArgs) {
   const { REGISTRANTS } = context.cloudflare.env;
+  const url = new URL(request.url);
+  const invitationCode = url.searchParams.get('c');
+  
   try {
     // Ensure tables exist using batch operations
     await REGISTRANTS.batch([
       REGISTRANTS.prepare(
-        "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, email TEXT NOT NULL UNIQUE, dietary_preferences TEXT NOT NULL, dietary_other TEXT, alcohol_preference BOOLEAN NOT NULL, research_consent BOOLEAN DEFAULT FALSE, created_at TEXT DEFAULT (datetime('now')))"
+        "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, email TEXT NOT NULL UNIQUE, dietary_preferences TEXT NOT NULL, dietary_other TEXT, alcohol_preference BOOLEAN NOT NULL, research_consent BOOLEAN DEFAULT FALSE, priority INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))"
       ),
       REGISTRANTS.prepare(
         "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, familiarity INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
@@ -37,6 +41,47 @@ export async function loader({ context }: Route.LoaderArgs) {
         "CREATE TABLE IF NOT EXISTS registrant_topics (id INTEGER PRIMARY KEY AUTOINCREMENT, registrant_id INTEGER NOT NULL, topic_id INTEGER NOT NULL, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (registrant_id) REFERENCES registrants(id), FOREIGN KEY (topic_id) REFERENCES topics(id))"
       )
     ]);
+
+    // Determine user's priority from invitation code
+    const userPriority = getPriorityFromCode(invitationCode);
+
+    // Check seat availability for this priority level and all lower levels
+    const { results: seatCount } = await REGISTRANTS
+      .prepare(`
+        SELECT COUNT(*) as count 
+        FROM registrants 
+        WHERE priority >= ?
+      `)
+      .bind(userPriority)
+      .all();
+
+    const currentSeats = seatCount?.[0]?.count ?? 0;
+    const maxSeats = getMaxSeatsForPriority(userPriority);
+    const seatsAvailable = maxSeats - currentSeats;
+    
+    // If no seats available at user's priority, check if they can downgrade to a lower tier
+    let effectivePriority = userPriority;
+    if (seatsAvailable <= 0) {
+      // Check each lower priority tier for availability
+      for (let checkPriority = userPriority - 1; checkPriority >= 0; checkPriority--) {
+        const { results: lowerTierCount } = await REGISTRANTS
+          .prepare(`
+            SELECT COUNT(*) as count 
+            FROM registrants 
+            WHERE priority >= ?
+          `)
+          .bind(checkPriority)
+          .all();
+        
+        const lowerTierSeats = lowerTierCount?.[0]?.count ?? 0;
+        const lowerTierMax = getMaxSeatsForPriority(checkPriority);
+        
+        if (lowerTierSeats < lowerTierMax) {
+          effectivePriority = checkPriority;
+          break;
+        }
+      }
+    }
 
     const [registrantsResult, languagesResult, topicsResult] = await Promise.all([
       REGISTRANTS
@@ -59,7 +104,11 @@ export async function loader({ context }: Route.LoaderArgs) {
     return { 
       registrants: registrantsResult.results ?? [],
       languages: languagesResult.results ?? [],
-      topics: topicsResult.results ?? []
+      topics: topicsResult.results ?? [],
+      seatsAvailable,
+      userPriority,
+      effectivePriority,
+      isFullyBooked: effectivePriority === -1
     };
   } catch (error) {
     console.error("Loader error:", error);
@@ -67,6 +116,10 @@ export async function loader({ context }: Route.LoaderArgs) {
       registrants: [], 
       languages: [],
       topics: [],
+      seatsAvailable: 0,
+      userPriority: 0,
+      effectivePriority: -1,
+      isFullyBooked: true,
       error: homeContent.messages.error.load 
     };
   }
@@ -83,6 +136,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const dietaryOther = String(formData.get("dietary_other") ?? "").trim();
   const alcohol = formData.get("alcohol");
   const researchConsentRaw = formData.get("research_consent");
+  let userPriority = Number(formData.get('priority') ?? 0);
   
   // Get languages and topics from form data
   const languages = formData.getAll("languages").map(String).filter(Boolean);
@@ -128,10 +182,52 @@ export async function action({ request, context }: Route.ActionArgs) {
       }
     }
 
+    // Check seat availability again (race condition protection)
+    // Use the effective priority determined in the loader
+    const { results: seatCount } = await REGISTRANTS
+      .prepare(`
+        SELECT COUNT(*) as count 
+        FROM registrants 
+        WHERE priority >= ?
+      `)
+      .bind(userPriority)
+      .all();
+
+    const currentSeats = seatCount?.[0]?.count ?? 0;
+    const maxSeats = getMaxSeatsForPriority(userPriority);
+    
+    // If user's priority tier is full, check for downgrade availability
+    if (currentSeats >= maxSeats) {
+      let canDowngrade = false;
+      for (let checkPriority = userPriority - 1; checkPriority >= 0; checkPriority--) {
+        const { results: lowerTierCount } = await REGISTRANTS
+          .prepare(`
+            SELECT COUNT(*) as count 
+            FROM registrants 
+            WHERE priority >= ?
+          `)
+          .bind(checkPriority)
+          .all();
+        
+        const lowerTierSeats = lowerTierCount?.[0]?.count ?? 0;
+        const lowerTierMax = getMaxSeatsForPriority(checkPriority);
+        
+        if (lowerTierSeats < lowerTierMax) {
+          canDowngrade = true;
+          userPriority = checkPriority; // Update to use the available tier
+          break;
+        }
+      }
+      
+      if (!canDowngrade) {
+        return { ok: false, error: homeContent.messages.error.fullyBooked };
+      }
+    }
+
     // Use D1's transaction API:
     const result = await REGISTRANTS.batch([
-      // Insert the new registrant
-      REGISTRANTS.prepare("INSERT INTO registrants (name, email, dietary_preferences, dietary_other, alcohol_preference, research_consent) VALUES (?1, ?2, ?3, ?4, ?5, ?6)").bind(name, email, dietary, dietaryOther, alcoholPreference, researchConsent)
+      // Insert the new registrant with priority
+      REGISTRANTS.prepare("INSERT INTO registrants (name, email, dietary_preferences, dietary_other, alcohol_preference, research_consent, priority) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)").bind(name, email, dietary, dietaryOther, alcoholPreference, researchConsent, userPriority)
     ]);
     
     const newRegistrantId = result[0].meta?.last_row_id;
@@ -342,6 +438,22 @@ export default function Home(_: Route.ComponentProps) {
     updateSliderGradient(e.target);
   };
   
+  // Show fully booked message if no seats available
+  if (data.isFullyBooked) {
+    return (
+      <main className="pt-16 p-4 container mx-auto max-w-2xl">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold mb-4">{homeContent.page.title}</h1>
+          <div className="mb-6 rounded-md border border-red-300 bg-red-50 p-6 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-200">
+            <h2 className="text-2xl font-semibold mb-2">{homeContent.fullyBooked.title}</h2>
+            <p className="text-lg">{homeContent.fullyBooked.message}</p>
+            <p className="mt-2 text-sm">{homeContent.fullyBooked.contactInfo}</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+  
   return (
     <main className="pt-16 p-4 container mx-auto max-w-2xl">
       <h1 className="text-3xl font-bold mb-4 text-center">{homeContent.page.title}</h1>
@@ -434,6 +546,9 @@ export default function Home(_: Route.ComponentProps) {
         // Show form when not submitted
         <>
           <Form method="post" className="space-y-6">
+            {/* Hidden priority field */}
+            <input type="hidden" name="priority" value={data.effectivePriority} />
+            
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.information.title}</h2>
             <div className="space-y-4">
