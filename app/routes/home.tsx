@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import QRCode from "react-qr-code";
 import swishLogo from "../assets/swish_logo.png";
 import { buildSwishUrl, paymentConfig } from "../config/payment";
-import { getPriorityFromCode, getMaxSeatsForPriority, getSeatsInTier } from "../config/seats";
+import { getPriorityFromCode, getSeatsInTier } from "../config/seats";
 
 export function meta({}: Route.MetaArgs) {
   return [

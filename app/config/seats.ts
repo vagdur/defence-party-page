@@ -28,9 +28,9 @@ export function getPriorityFromCode(code: string | null): number {
 }
 
 export function getMaxSeatsForPriority(priority: number): number {
-  // Calculate cumulative seats up to and including this priority level
+  // Calculate cumulative seats from lowest priority (0) up to and including this priority level
   let totalSeats = 0;
-  for (let p = 3; p >= priority; p--) {
+  for (let p = 0; p <= priority; p++) {
     totalSeats += seatConfig.seatsPerTier[p as PriorityLevel] ?? 0;
   }
   return totalSeats;
