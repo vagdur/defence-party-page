@@ -6,9 +6,9 @@
   "name": "defence-party-page",
   "compatibility_date": "2025-04-01",
   "main": "./workers/app.ts",
-  "vars": {
-    "D1_DATABASE_ID": "f4dc0b94-717d-4ca7-8f65-f1aa46eb15e9"
-  },
+  /**"vars": {
+    "VALUE_FROM_CLOUDFLARE": "Et in lumine"
+  },*/
   "observability": {
     "enabled": true
   },
@@ -16,7 +16,7 @@
     {
       "binding": "REGISTRANTS",
       "database_name": "party-registrants",
-      "database_id": "${D1_DATABASE_ID}"
+      "database_id": "f4dc0b94-717d-4ca7-8f65-f1aa46eb15e9"
     }
   ],
   /**
