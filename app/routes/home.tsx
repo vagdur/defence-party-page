@@ -23,7 +23,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     // Ensure tables exist using batch operations
     await REGISTRANTS.batch([
       REGISTRANTS.prepare(
-        "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, email TEXT NOT NULL UNIQUE, dietary_preferences TEXT NOT NULL, dietary_other TEXT, alcohol_preference BOOLEAN NOT NULL, research_consent BOOLEAN DEFAULT FALSE, priority INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))"
+        "CREATE TABLE IF NOT EXISTS registrants (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL UNIQUE, email TEXT NOT NULL UNIQUE, dietary_preferences TEXT NOT NULL, dietary_other TEXT, alcohol_preference BOOLEAN NOT NULL, research_consent BOOLEAN DEFAULT FALSE, priority INTEGER DEFAULT 0, original_priority INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now')))"
       ),
       REGISTRANTS.prepare(
         "CREATE TABLE IF NOT EXISTS relationships (id INTEGER PRIMARY KEY AUTOINCREMENT, new_registrant_id INTEGER NOT NULL, known_registrant_id INTEGER NOT NULL, familiarity INTEGER NOT NULL DEFAULT 0, created_at TEXT DEFAULT (datetime('now')), FOREIGN KEY (new_registrant_id) REFERENCES registrants(id), FOREIGN KEY (known_registrant_id) REFERENCES registrants(id))"
@@ -144,6 +144,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const alcohol = formData.get("alcohol");
   const researchConsentRaw = formData.get("research_consent");
   let userPriority = Number(formData.get('priority') ?? 0);
+  const originalPriority = Number(formData.get('original_priority') ?? 0);
   
   // Get languages and topics from form data
   const languages = formData.getAll("languages").map(String).filter(Boolean);
@@ -233,8 +234,8 @@ export async function action({ request, context }: Route.ActionArgs) {
 
     // Use D1's transaction API:
     const result = await REGISTRANTS.batch([
-      // Insert the new registrant with priority
-      REGISTRANTS.prepare("INSERT INTO registrants (name, email, dietary_preferences, dietary_other, alcohol_preference, research_consent, priority) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)").bind(name, email, dietary, dietaryOther, alcoholPreference, researchConsent, userPriority)
+      // Insert the new registrant with priority and original priority
+      REGISTRANTS.prepare("INSERT INTO registrants (name, email, dietary_preferences, dietary_other, alcohol_preference, research_consent, priority, original_priority) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)").bind(name, email, dietary, dietaryOther, alcoholPreference, researchConsent, userPriority, originalPriority)
     ]);
     
     const newRegistrantId = result[0].meta?.last_row_id;
@@ -554,7 +555,8 @@ export default function Home(_: Route.ComponentProps) {
         <>
           <Form method="post" className="space-y-6">
             {/* Hidden priority field */}
-            <input type="hidden" name="priority" value={data.effectivePriority} />
+              <input type="hidden" name="priority" value={data.effectivePriority} />
+              <input type="hidden" name="original_priority" value={data.userPriority} />
             
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">{homeContent.form.sections.information.title}</h2>
