@@ -7,6 +7,14 @@ export interface HomeContent {
     title: string;
     subtitle: string;
   };
+  partyDetails: {
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    location: string;
+    address: string;
+  };
   messages: {
     error: {
       validation: string;
@@ -108,6 +116,14 @@ export const homeContent: HomeContent = {
   page: {
     title: "Defence Party Registration",
     subtitle: "Welcome to the Defence Party registration page!"
+  },
+  partyDetails: {
+    title: "🎉 Party Details",
+    description: "It is time to celebrate the end of my PhD! As is customary, this is to be done with a party. There will be a three-course meal, and then time for dancing or talking or drinking, or any combination thereof.",
+    date: "Friday, September 19th, 2025",
+    time: "6:00 PM - When you get tired of me (Or 01:00 AM, whichever comes first)",
+    location: "Gamla Stadshotellet",
+    address: "Drottninggatan 9, Uppsala"
   },
   messages: {
     error: {

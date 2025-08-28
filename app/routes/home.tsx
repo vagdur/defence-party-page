@@ -345,6 +345,35 @@ export default function Home(_: Route.ComponentProps) {
   return (
     <main className="pt-16 p-4 container mx-auto max-w-2xl">
       <h1 className="text-3xl font-bold mb-4 text-center">{homeContent.page.title}</h1>
+      
+      {/* Party Time and Location Information */}
+      <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border border-blue-200 dark:border-blue-800 rounded-lg shadow-sm">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-blue-900 dark:text-blue-100 mb-3">
+            {homeContent.partyDetails.title}
+          </h2>
+          <p className="text-blue-800 dark:text-blue-200 mb-4 leading-relaxed">
+            {homeContent.partyDetails.description}
+          </p>
+          <div className="space-y-2 text-blue-800 dark:text-blue-200">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-lg">📅</span>
+              <span className="font-medium">{homeContent.partyDetails.date}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-lg">🕒</span>
+              <span className="font-medium">{homeContent.partyDetails.time}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-lg">📍</span>
+              <span className="font-medium">{homeContent.partyDetails.location}</span>
+            </div>
+            <div className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+              {homeContent.partyDetails.address}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {isSubmitted ? (
         // Show success message when form is submitted
