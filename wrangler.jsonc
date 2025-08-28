@@ -19,6 +19,12 @@
       "database_id": "f4dc0b94-717d-4ca7-8f65-f1aa46eb15e9"
     }
   ],
+  "custom_domains": [
+    {
+      "domain": "demo.defenceparty.rsvp",
+      "zone_name": "defenceparty.rsvp"
+    }
+  ],
   /**
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
