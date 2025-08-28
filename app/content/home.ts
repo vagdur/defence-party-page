@@ -147,8 +147,8 @@ export const homeContent: HomeContent = {
   },
   fullyBooked: {
     title: "Fully Booked",
-    message: "We're sorry, but all seats for this event have been reserved.",
-    contactInfo: "Please contact the organizer if you'd like to be added to the waitlist."
+    message: "Sorry, but it appears we are out of seats!",
+    contactInfo: "If you really want to come, contact me and maybe I will be able to shake a seat out of the couch cushions for you."
   },
   payment: {
     title: "Pay for the meal via Swish",
@@ -196,12 +196,12 @@ export const homeContent: HomeContent = {
             note: "Alcohol costs {alcoholCost}:- extra."
           },
           languages: {
-            label: "Languages you are comfortable having a conversation in",
+            label: "What languages are you comfortable having a conversation in? (You can add more by typing in the text box and clicking the button.)",
             placeholder: "Enter a language...",
             addButton: "Add Language"
           },
           topics: {
-            label: "Conversation topics of interest",
+            label: "What topics would you want to talk about over dinner? (You can add more by typing in the text box and clicking the button.)",
             placeholder: "Enter a topic...",
             addButton: "Add Topic"
           }
