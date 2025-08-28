@@ -19,6 +19,16 @@ export const seatConfig = {
   defaultPriority: 0
 } as const;
 
+export function getTierName(priority: number): string {
+  switch (priority) {
+    case 3: return "VIP";
+    case 2: return "Close Friends";
+    case 1: return "Colleagues";
+    case 0: return "General";
+    default: return `Tier ${priority}`;
+  }
+}
+
 export type PriorityLevel = keyof typeof seatConfig.seatsPerTier;
 export type InvitationCode = keyof typeof seatConfig.codeToPriority;
 

@@ -81,15 +81,7 @@ export async function loader({ context }: Route.LoaderArgs) {
   }
 }
 
-function getTierName(priority: number): string {
-  switch (priority) {
-    case 3: return "VIP";
-    case 2: return "Close Friends";
-    case 1: return "Colleagues";
-    case 0: return "General";
-    default: return `Tier ${priority}`;
-  }
-}
+import { getTierName } from "../config/seats";
 
 export default function Admin(_: Route.ComponentProps) {
   const data = useLoaderData<typeof loader>();
