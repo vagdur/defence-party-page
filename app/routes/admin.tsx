@@ -50,8 +50,9 @@ export async function loader({ context }: Route.LoaderArgs) {
     // Get cumulative availability for each tier
     const cumulativeAvailability = seatCounts.map((tier, index) => {
       const cumulativeMax = getMaxSeatsForPriority(tier.priority);
+      // Calculate cumulative usage from current tier down to lowest priority (General)
       const cumulativeCurrent = seatCounts
-        .slice(0, index + 1)
+        .slice(index)  // Take from current tier index to end (current to lowest priority)
         .reduce((sum, t) => sum + t.currentSeats, 0);
       
       return {
@@ -174,7 +175,7 @@ export default function Admin(_: Route.ComponentProps) {
                   </p>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded p-3">
-                  <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">Cumulative (including higher tiers)</p>
+                  <p className="font-medium text-blue-700 dark:text-blue-300 mb-1">Cumulative (including lower tiers)</p>
                   <p className="text-blue-600 dark:text-blue-400">
                     {tier.cumulativeCurrent} / {tier.cumulativeMax} seats used
                   </p>
