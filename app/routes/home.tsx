@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import QRCode from "react-qr-code";
 import swishLogo from "../assets/swish_logo.png";
 import { buildSwishUrl, paymentConfig } from "../config/payment";
-import { getPriorityFromCode, getMaxSeatsForPriority } from "../config/seats";
+import { getPriorityFromCode, getMaxSeatsForPriority, getSeatsInTier } from "../config/seats";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -45,19 +45,19 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     // Determine user's priority from invitation code
     const userPriority = getPriorityFromCode(invitationCode);
 
-    // Check seat availability for this priority level and all lower levels
+    // Check seat availability for this priority level
     const { results: seatCount } = await REGISTRANTS
       .prepare(`
         SELECT COUNT(*) as count 
         FROM registrants 
-        WHERE priority >= ?
+        WHERE priority = ?
       `)
       .bind(userPriority)
       .all();
 
-    const currentSeats = seatCount?.[0]?.count ?? 0;
-    const maxSeats = getMaxSeatsForPriority(userPriority);
-    const seatsAvailable = maxSeats - currentSeats;
+    const currentSeatsInTier = seatCount?.[0]?.count ?? 0;
+    const maxSeatsInTier = getSeatsInTier(userPriority);
+    const seatsAvailable = maxSeatsInTier - currentSeatsInTier;
     
     // If no seats available at user's priority, check if they can downgrade to a lower tier
     let effectivePriority = userPriority;
@@ -68,13 +68,13 @@ export async function loader({ context, request }: Route.LoaderArgs) {
           .prepare(`
             SELECT COUNT(*) as count 
             FROM registrants 
-            WHERE priority >= ?
+            WHERE priority = ?
           `)
           .bind(checkPriority)
           .all();
         
         const lowerTierSeats = lowerTierCount?.[0]?.count ?? 0;
-        const lowerTierMax = getMaxSeatsForPriority(checkPriority);
+        const lowerTierMax = getSeatsInTier(checkPriority);
         
         if (lowerTierSeats < lowerTierMax) {
           effectivePriority = checkPriority;
@@ -188,29 +188,29 @@ export async function action({ request, context }: Route.ActionArgs) {
       .prepare(`
         SELECT COUNT(*) as count 
         FROM registrants 
-        WHERE priority >= ?
+        WHERE priority = ?
       `)
       .bind(userPriority)
       .all();
 
-    const currentSeats = seatCount?.[0]?.count ?? 0;
-    const maxSeats = getMaxSeatsForPriority(userPriority);
+    const currentSeatsInTier = seatCount?.[0]?.count ?? 0;
+    const maxSeatsInTier = getSeatsInTier(userPriority);
     
     // If user's priority tier is full, check for downgrade availability
-    if (currentSeats >= maxSeats) {
+    if (currentSeatsInTier >= maxSeatsInTier) {
       let canDowngrade = false;
       for (let checkPriority = userPriority - 1; checkPriority >= 0; checkPriority--) {
         const { results: lowerTierCount } = await REGISTRANTS
           .prepare(`
             SELECT COUNT(*) as count 
             FROM registrants 
-            WHERE priority >= ?
+            WHERE priority = ?
           `)
           .bind(checkPriority)
           .all();
         
         const lowerTierSeats = lowerTierCount?.[0]?.count ?? 0;
-        const lowerTierMax = getMaxSeatsForPriority(checkPriority);
+        const lowerTierMax = getSeatsInTier(checkPriority);
         
         if (lowerTierSeats < lowerTierMax) {
           canDowngrade = true;
