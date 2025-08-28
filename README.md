@@ -40,7 +40,7 @@ This application serves as a sophisticated party registration system that goes b
 ## Use Cases
 
 This system is particularly valuable for:
-- **Academic Events**: PhD defenses, conferences, and research gatherings where social networking is crucial
+- **Academic Events**: PhD defences, conferences, and research gatherings where social networking is crucial
 - **Professional Networking**: Corporate events, industry meetups, and professional development gatherings
 - **Social Gatherings**: Parties where optimizing guest interactions enhances the overall experience
 - **Research Applications**: Social network analysis studies and behavioral research

@@ -4,7 +4,7 @@ export const paymentConfig = {
     amount: 400,
     alcoholCost: 75,
     currency: "SEK",
-    message: "Defense Party",
+    message: "Defence Party",
     allowEditAmount: true,
     source: "qr"
   }
