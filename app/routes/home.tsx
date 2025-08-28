@@ -445,8 +445,8 @@ export default function Home(_: Route.ComponentProps) {
     updateSliderGradient(e.target);
   };
   
-  // Show fully booked message if no seats available
-  if (data.isFullyBooked) {
+  // Show fully booked message if no seats available (but not if user just successfully registered)
+  if (data.isFullyBooked && !actionData?.ok) {
     return (
       <main className="pt-16 p-4 container mx-auto max-w-2xl">
         <div className="text-center">
