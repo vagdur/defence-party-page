@@ -1,49 +1,103 @@
-# Hono + React Router + Vite + ShadCN UI on Cloudflare Workers
+# Party Registration & Social Network Management System
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/react-router-hono-fullstack-template)
-![Build modern full-stack apps with Hono, React Router, and ShadCN UI on Cloudflare Workers](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/24c5a7dd-e1e3-43a9-b912-d78d9a4293bc/public)
+I used AI to write nearly the entire thing, and so of course I let it also write most of the README:
 
-<!-- dash-content-start -->
+A comprehensive event registration and social network analysis platform built for managing party registrations while tracking and analyzing social connections between attendees. This system combines traditional event management with advanced social network mapping to optimize seating arrangements and enhance guest experiences.
 
-A modern full-stack template powered by [Cloudflare Workers](https://workers.cloudflare.com/), using [Hono](https://hono.dev/) for backend APIs, [React Router](https://reactrouter.com/) for frontend routing, and [shadcn/ui](https://ui.shadcn.com/) for beautiful, accessible components styled with [Tailwind CSS](https://tailwindcss.com/).
+## Overview
 
-Built with the [Cloudflare Vite plugin](https://developers.cloudflare.com/workers/vite-plugin/) for optimized static asset delivery and seamless local development. React is configured in single-page app (SPA) mode via Workers.
+This application serves as a sophisticated party registration system that goes beyond simple RSVP management. It collects detailed information about attendees including their social connections, language preferences, and conversation topics, so you can use this data to create optimal seating arrangements that maximize social interaction and comfort.
 
-A perfect starting point for building interactive, styled, and edge-deployed SPAs with minimal configuration.
+### Key Features
 
-## Features
+- **🎫 Smart Registration System**
+  - Tiered invitation system with priority-based seating allocation
+  - Real-time capacity management
+  - Comprehensive attendee information collection (dietary preferences, language skills, interests)
 
-- ⚡ Full-stack app on Cloudflare Workers
-- 🔁 Hono for backend API endpoints
-- 🧭 React Router for client-side routing
-- 🎨 ShadCN UI with Tailwind CSS for components and styling
-- 🧱 File-based route separation
-- 🚀 Zero-config Vite build for Workers
-- 🛠️ Automatically deploys with Wrangler
-- 🔎 Built-in Observability to monitor your Worker
-<!-- dash-content-end -->
+- **🕸️ Social Network Analysis**
+  - Relationship mapping between attendees using familiarity scales
+  - Language compatibility tracking for conversation optimization
+  - Interest-based matching for topic discussions
+  - Algorithm-driven seating assignments based on social connections
 
-## Tech Stack
+- **💳 Integrated Payment Processing**
+  - Swish payment integration for seamless transactions
+  - Mobile and desktop payment options
+  - Automatic cost calculations including alcohol preferences
+
+- **📊 Administrative Dashboard**
+  - Real-time registration statistics and tier management
+  - Capacity monitoring across different invitation tiers
+  - Social network visualization and analysis tools
+  - Export capabilities for research and planning
+
+- **🔒 Privacy & Research Features**
+  - Optional anonymized data collection for research purposes
+  - GDPR-compliant data handling
+  - Configurable consent management
+
+## Use Cases
+
+This system is particularly valuable for:
+- **Academic Events**: PhD defenses, conferences, and research gatherings where social networking is crucial
+- **Professional Networking**: Corporate events, industry meetups, and professional development gatherings
+- **Social Gatherings**: Parties where optimizing guest interactions enhances the overall experience
+- **Research Applications**: Social network analysis studies and behavioral research
+
+## Technical Architecture
+
+Built on a modern full-stack architecture using:
 
 - **Frontend**: React + React Router + ShadCN UI
-  - SPA architecture powered by React Router
-  - Includes accessible, themeable UI from ShadCN
-  - Styled with utility-first Tailwind CSS
-  - Built and optimized with Vite
+  - Responsive design with mobile-first approach
+  - Accessible UI components with Tailwind CSS
+  - Real-time form validation and user feedback
 
 - **Backend**: Hono on Cloudflare Workers
-  - API routes defined and handled via Hono in `/api/*`
-  - Supports REST-like endpoints, CORS, and middleware
+  - Edge computing for global performance
+  - RESTful API endpoints for registration management
+  - Social network data processing and analysis
 
 - **Deployment**: Cloudflare Workers via Wrangler
-  - Vite plugin auto-bundles frontend and backend together
-  - Deployed worldwide on Cloudflare’s edge network
+  - Worldwide edge deployment for low-latency access
+  - Automatic scaling and high availability
+  - Integrated CDN for static assets
 
-## Resources
+## Getting Started
 
-- 🧩 [Hono on Cloudflare Workers](https://hono.dev/docs/getting-started/cloudflare-workers)
-- 📦 [Vite Plugin for Cloudflare](https://developers.cloudflare.com/workers/vite-plugin/)
-- 🛠 [Wrangler CLI reference](https://developers.cloudflare.com/workers/wrangler/)
-- 🎨 [shadcn/ui](https://ui.shadcn.com)
-- 💨 [Tailwind CSS Documentation](https://tailwindcss.com/)
-- 🔀 [React Router Docs](https://reactrouter.com/)
+It should be possible to get this set up by just cloning the repository, and then creating a new worker in Cloudflare based on that repository. I have never tried that, though, so some finagling of details may be needed. I offer no support in this, consult your nearest ChatGPT for help with this process.
+
+## Configuration
+
+### Event Details
+Edit `app/content/home.ts` to customize:
+- Event title, date, and location
+- Party description and details
+- Form fields and validation messages
+- Payment instructions
+
+### Seating Management
+Configure `app/config/seats.ts` to set up:
+- Priority tiers and seat allocations
+- Invitation code mapping
+- Capacity limits per tier
+
+### Payment Setup
+Update `app/config/payment.ts` with:
+- Swish payment details
+- Cost calculations
+- Payment instructions
+
+
+## Contributing
+
+If you have a nice idea for something to improve, feel free to drop a pull request on me. Or just branch off the entire thing and keep developing it on your own.
+
+## License
+
+Copyleft - do whatever you like with it. AI wrote 95% of the code anyway, so what authorship claim do I have?
+
+## Support
+
+For technical support or feature requests, please open an issue in the repository.
