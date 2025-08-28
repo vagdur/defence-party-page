@@ -66,8 +66,8 @@ export async function loader({ context }: Route.LoaderArgs) {
     return {
       tiers: cumulativeAvailability,
       totalRegistrants,
-      totalMaxSeats: getMaxSeatsForPriority(0), // Total seats including all tiers
-      totalAvailable: Math.max(0, getMaxSeatsForPriority(0) - totalRegistrants)
+      totalMaxSeats: getMaxSeatsForPriority(3), // Total seats including all tiers
+      totalAvailable: Math.max(0, getMaxSeatsForPriority(3) - totalRegistrants)
     };
   } catch (error) {
     console.error("Admin loader error:", error);
