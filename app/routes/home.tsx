@@ -491,6 +491,31 @@ export default function Home(_: Route.ComponentProps) {
   
   return (
     <main className="pt-16 p-4 container mx-auto max-w-2xl">
+      {/* Demo Notice Banner */}
+      <div className="mb-6 rounded-lg border-2 border-amber-300 bg-amber-50 p-4 text-amber-800 dark:border-amber-600 dark:bg-amber-950 dark:text-amber-200">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">⚠️</span>
+              <h2 className="text-lg font-semibold">Demo Page</h2>
+            </div>
+            <p className="text-sm mb-3">
+              This is a demonstration page for testing purposes only. This is not the actual registration page for the event.
+            </p>
+            <div className="flex items-center gap-2 text-xs">
+              <span>🔗</span>
+              <a 
+                href="/admin" 
+                className="font-medium underline hover:text-amber-900 dark:hover:text-amber-100 transition-colors"
+              >
+                View Admin Panel
+              </a>
+              <span>to see registrations and manage the demo data.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <h1 className="text-3xl font-bold mb-4 text-center">{homeContent.page.title}</h1>
       
       {/* Party Time and Location Information */}
