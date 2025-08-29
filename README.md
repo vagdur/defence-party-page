@@ -1,5 +1,7 @@
 # Party Registration & Social Network Management System
 
+[Here is the live version of this demo page.](https://demo.defenceparty.rsvp)
+
 I used AI to write nearly the entire thing, and so of course I let it also write most of the README:
 
 A comprehensive event registration and social network analysis platform built for managing party registrations while tracking and analyzing social connections between attendees. This system combines traditional event management with advanced social network mapping to optimize seating arrangements and enhance guest experiences.
