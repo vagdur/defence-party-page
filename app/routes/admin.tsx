@@ -175,7 +175,16 @@ export default function Admin(_: Route.ComponentProps) {
 
   return (
     <main className="pt-16 p-4 container mx-auto max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6 text-center">Admin Panel - Seat Availability</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Admin Panel - Seat Availability</h1>
+        <a 
+          href="/" 
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+        >
+          <span>←</span>
+          Back to Main Page
+        </a>
+      </div>
       
       {/* Action Messages */}
       {fetcher.data && (
