@@ -1,5 +1,5 @@
 import type { Route } from "./+types/admin.js";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useFetcher } from "react-router";
 import { seatConfig, getMaxSeatsForPriority } from "../config/seats";
 
 export function meta({}: Route.MetaArgs) {
@@ -103,10 +103,61 @@ export async function loader({ context }: Route.LoaderArgs) {
   }
 }
 
+export async function action({ request, context }: Route.ActionArgs) {
+  const { REGISTRANTS } = context.cloudflare.env;
+  const formData = await request.formData();
+  const action = formData.get("action");
+
+  try {
+    if (action === "clear_registrants") {
+      // Clear all tables except topics and languages
+      await REGISTRANTS.batch([
+        REGISTRANTS.prepare("DELETE FROM registrant_languages"),
+        REGISTRANTS.prepare("DELETE FROM registrant_topics"),
+        REGISTRANTS.prepare("DELETE FROM relationships"),
+        REGISTRANTS.prepare("DELETE FROM registrants")
+      ]);
+      
+      return { success: true, message: "All registrant data cleared successfully" };
+    }
+    
+    if (action === "clear_topics_languages") {
+      // First check if there are any registrants (to ensure dependencies are met)
+      const { results: registrantCheck } = await REGISTRANTS
+        .prepare("SELECT COUNT(*) as count FROM registrants")
+        .all();
+      
+      const registrantCount = registrantCheck?.[0]?.count ?? 0;
+      
+      if (registrantCount > 0) {
+        return { 
+          success: false, 
+          error: "Cannot clear topics and languages while registrants exist. Please clear registrants first." 
+        };
+      }
+      
+      // Clear topics and languages
+      await REGISTRANTS.batch([
+        REGISTRANTS.prepare("DELETE FROM topics"),
+        REGISTRANTS.prepare("DELETE FROM languages")
+      ]);
+      
+      return { success: true, message: "Topics and languages cleared successfully" };
+    }
+    
+    return { success: false, error: "Invalid action" };
+  } catch (error) {
+    console.error("Admin action error:", error);
+    return { success: false, error: "Failed to perform database operation" };
+  }
+}
+
 import { getTierName } from "../config/seats";
 
 export default function Admin(_: Route.ComponentProps) {
   const data = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
+  const isSubmitting = fetcher.state === "submitting";
 
   if (data.error) {
     return (
@@ -125,6 +176,63 @@ export default function Admin(_: Route.ComponentProps) {
   return (
     <main className="pt-16 p-4 container mx-auto max-w-4xl">
       <h1 className="text-3xl font-bold mb-6 text-center">Admin Panel - Seat Availability</h1>
+      
+      {/* Action Messages */}
+      {fetcher.data && (
+        <div className={`mb-6 rounded-md border p-6 ${
+          fetcher.data.success 
+            ? 'border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-950 dark:text-green-200'
+            : 'border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-200'
+        }`}>
+          <h2 className="text-xl font-semibold mb-2">
+            {fetcher.data.success ? 'Success' : 'Error'}
+          </h2>
+          <p className="text-lg">
+            {fetcher.data.success ? fetcher.data.message : fetcher.data.error}
+          </p>
+        </div>
+      )}
+      
+      {/* Database Management Section */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold mb-6">Database Management</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <fetcher.Form method="post">
+            <input type="hidden" name="action" value="clear_registrants" />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+            >
+              {isSubmitting ? "Clearing..." : "Clear All Registrant Data"}
+            </button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              This will delete all registrants, relationships, registrant-language associations, and registrant-topic associations.
+            </p>
+          </fetcher.Form>
+          
+          <fetcher.Form method="post">
+            <input type="hidden" name="action" value="clear_topics_languages" />
+            <button
+              type="submit"
+              disabled={isSubmitting || data.totalRegistrants > 0}
+              className={`w-full font-semibold py-3 px-6 rounded-lg transition-colors duration-200 ${
+                data.totalRegistrants > 0
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  : 'bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400 text-white'
+              }`}
+            >
+              {isSubmitting ? "Clearing..." : "Clear Topics & Languages"}
+            </button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {data.totalRegistrants > 0 
+                ? "Cannot clear while registrants exist. Clear registrants first."
+                : "This will delete all topics and languages."
+              }
+            </p>
+          </fetcher.Form>
+        </div>
+      </div>
       
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
