@@ -14,6 +14,7 @@ export interface HomeContent {
     time: string;
     location: string;
     address: string;
+    dressCode: string;
   };
   messages: {
     error: {
@@ -49,10 +50,6 @@ export interface HomeContent {
     sections: {
       information: {
         title: string;
-        subheadings?: {
-          personal: string;
-          social: string;
-        };
         fields: {
           firstName: {
             label: string;
@@ -78,6 +75,9 @@ export interface HomeContent {
             yes: string;
             no: string;
             note: string;
+          };
+          speech: {
+            label: string;
           };
           languages: {
             label: string;
@@ -129,7 +129,8 @@ export const homeContent: HomeContent = {
     date: "Friday, September 19th, 2025",
     time: "6:00 PM - When you get tired of me (Or 01:00 AM, whichever comes first)",
     location: "Gamla Stadshotellet",
-    address: "Drottninggatan 9, Uppsala"
+    address: "Drottninggatan 9, Uppsala",
+    dressCode: "Udda kavaj/smart casual (If you show up in full evening dress, I will make fun of you.)"
   },
   messages: {
     error: {
@@ -165,10 +166,7 @@ export const homeContent: HomeContent = {
     sections: {
       information: {
         title: "Your Information",
-        subheadings: {
-          personal: "Personal data",
-          social: "Social network data",
-        },
+
         fields: {
           firstName: {
             label: "First name"
@@ -194,6 +192,9 @@ export const homeContent: HomeContent = {
             yes: "Yes",
             no: "No",
             note: "Alcohol costs {alcoholCost}:- extra."
+          },
+          speech: {
+            label: "I would like to give a speech or do some other funny or serious thing."
           },
           languages: {
             label: "What languages are you comfortable having a conversation in? (You can add more by typing in the text box and clicking the button.)",
