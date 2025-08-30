@@ -63,6 +63,16 @@ export async function loader({ context }: Route.LoaderArgs) {
     
     const totalRegistrants = totalResult?.[0]?.count ?? 0;
 
+    // Get registrants who want to give a speech
+    const { results: speechRegistrants } = await REGISTRANTS
+      .prepare(`
+        SELECT name, email
+        FROM registrants 
+        WHERE speech_preference = TRUE
+        ORDER BY created_at DESC
+      `)
+      .all();
+
     // Combine seat counts with original priority counts
     const seatCountsWithOriginal = seatCounts.map((tier, index) => ({
       ...tier,
@@ -89,7 +99,8 @@ export async function loader({ context }: Route.LoaderArgs) {
       tiers: cumulativeAvailability,
       totalRegistrants,
       totalMaxSeats: getMaxSeatsForPriority(3), // Total seats including all tiers
-      totalAvailable: Math.max(0, getMaxSeatsForPriority(3) - totalRegistrants)
+      totalAvailable: Math.max(0, getMaxSeatsForPriority(3) - totalRegistrants),
+      speechRegistrants: speechRegistrants ?? []
     };
   } catch (error) {
     console.error("Admin loader error:", error);
@@ -98,6 +109,7 @@ export async function loader({ context }: Route.LoaderArgs) {
       totalRegistrants: 0,
       totalMaxSeats: 0,
       totalAvailable: 0,
+      speechRegistrants: [],
       error: "Failed to load seat data"
     };
   }
@@ -345,6 +357,45 @@ export default function Admin(_: Route.ComponentProps) {
           ))}
         </div>
       </div>
+
+             {/* Speech Registrants */}
+       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mt-8">
+         <h2 className="text-2xl font-semibold mb-6">Registrants Wanting to Give a Speech</h2>
+         {data.speechRegistrants.length > 0 ? (
+           <div className="overflow-x-auto">
+             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+               <thead className="bg-gray-50 dark:bg-gray-700">
+                 <tr>
+                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                     Name
+                   </th>
+                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                     Email
+                   </th>
+                 </tr>
+               </thead>
+               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                 {data.speechRegistrants.map((registrant: any, index: number) => (
+                   <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                       {registrant.name}
+                     </td>
+                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                       {registrant.email}
+                     </td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+           </div>
+         ) : (
+           <div className="text-center py-8">
+             <p className="text-gray-500 dark:text-gray-400 text-lg">
+               No registrants have indicated they want to give a speech yet.
+             </p>
+           </div>
+         )}
+       </div>
 
       {/* Last Updated */}
       <div className="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
