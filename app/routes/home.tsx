@@ -654,6 +654,22 @@ export default function Home(_: Route.ComponentProps) {
             <p className="text-sm mb-3">
               This is a demonstration page for testing purposes only. This is not the actual registration page for the event.
             </p>
+            <div className="text-sm mb-3 p-3 bg-amber-100 dark:bg-amber-900 rounded border border-amber-200 dark:border-amber-700">
+              <p className="font-medium mb-2">📋 How to Test Different Registration Priorities:</p>
+              <p className="text-xs mb-2 text-amber-800 dark:text-amber-200">
+                The invitation code is passed via the <code className="bg-amber-200 dark:bg-amber-800 px-1 rounded">c</code> parameter in the URL. Try these different priority levels:
+              </p>
+              <ul className="text-xs space-y-1 text-amber-800 dark:text-amber-200 mb-2">
+                <li>• <strong>VIP (Priority 3):</strong> <a href="?c=3" className="underline hover:text-amber-900 dark:hover:text-amber-100">Register with VIP access</a> - 2 seats available</li>
+                <li>• <strong>Close Friends (Priority 2):</strong> <a href="?c=2" className="underline hover:text-amber-900 dark:hover:text-amber-100">Register as Close Friend</a> - 1 seat available</li>
+                <li>• <strong>Colleagues (Priority 1):</strong> <a href="?c=1" className="underline hover:text-amber-900 dark:hover:text-amber-100">Register as Colleague</a> - 1 seat available</li>
+                <li>• <strong>General (Priority 0):</strong> <a href="?c=0" className="underline hover:text-amber-900 dark:hover:text-amber-100">Register with general priority</a> - 2 seats available</li>
+                <li>• <strong>No Code:</strong> <a href="/" className="underline hover:text-amber-900 dark:hover:text-amber-100">Register without code</a> - Defaults to General priority</li>
+              </ul>
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                Click any link above to test registration with that priority level!
+              </p>
+            </div>
             <div className="flex items-center gap-2 text-xs">
               <span>🔗</span>
               <a 
