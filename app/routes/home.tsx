@@ -137,7 +137,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const formData = await request.formData();
   const firstName = String(formData.get("first_name") ?? "").trim();
   const lastName = String(formData.get("last_name") ?? "").trim();
-  const name = [title, firstName, lastName].filter(Boolean).join(" ").trim();
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim();
   const email = String(formData.get("email") ?? "").trim();
   const dietary = String(formData.get("dietary") ?? "").trim();
   const dietaryOther = String(formData.get("dietary_other") ?? "").trim();
