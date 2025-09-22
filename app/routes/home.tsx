@@ -7,34 +7,6 @@ import swishLogo from "../assets/swish_logo.png";
 import { buildSwishUrl, paymentConfig } from "../config/payment";
 import { getPriorityFromCode, getSeatsInTier } from "../config/seats";
 
-// Input sanitization utility functions
-function sanitizeString(input: string | null | undefined, maxLength: number = 255): string {
-  if (!input) return "";
-  return String(input)
-    .trim()
-    .replace(/[<>]/g, "") // Remove potential HTML tags
-    .substring(0, maxLength);
-}
-
-function sanitizeEmail(input: string | null | undefined): string {
-  if (!input) return "";
-  return String(input).trim().toLowerCase();
-}
-
-function validateEmail(email: string): boolean {
-  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  return emailRegex.test(email) && email.length <= 254;
-}
-
-function sanitizeLanguageOrTopic(input: string | null | undefined, maxLength: number = 100): string {
-  if (!input) return "";
-  return String(input)
-    .trim()
-    .replace(/[<>]/g, "") // Remove potential HTML tags
-    .replace(/[^\w\s\-.,()]/g, "") // Only allow alphanumeric, spaces, hyphens, dots, commas, parentheses
-    .substring(0, maxLength);
-}
-
 export function meta({}: Route.MetaArgs) {
   return [
     { title: homeContent.meta.title },
@@ -45,7 +17,7 @@ export function meta({}: Route.MetaArgs) {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { REGISTRANTS } = context.cloudflare.env;
   const url = new URL(request.url);
-  const invitationCode = sanitizeString(url.searchParams.get('c'), 10); // Limit invitation code length
+  const invitationCode = url.searchParams.get('c');
   
   try {
     // Ensure tables exist using batch operations
@@ -163,79 +135,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const { REGISTRANTS } = context.cloudflare.env;
   const formData = await request.formData();
-  
-  // Check the action type
-  const actionType = formData.get("action_type");
-  
-  // Handle save language action
-  if (actionType === "save_language") {
-    const languageName = sanitizeLanguageOrTopic(String(formData.get("language_name") ?? ""));
-    if (!languageName) {
-      return { ok: false, error: "Language name is required" };
-    }
-    
-    try {
-      // Try to insert the language
-      await REGISTRANTS
-        .prepare("INSERT OR IGNORE INTO languages (name) VALUES (?)")
-        .bind(languageName)
-        .run();
-      
-      // Get the language ID to return
-      const { results } = await REGISTRANTS
-        .prepare("SELECT id FROM languages WHERE name = ?")
-        .bind(languageName)
-        .all();
-      
-      return { 
-        ok: true, 
-        language: { id: results?.[0]?.id, name: languageName },
-        action: "save_language"
-      };
-    } catch (error) {
-      console.error("Save language error:", error);
-      return { ok: false, error: "Failed to save language" };
-    }
-  }
-  
-  // Handle save topic action
-  if (actionType === "save_topic") {
-    const topicName = sanitizeLanguageOrTopic(String(formData.get("topic_name") ?? ""));
-    if (!topicName) {
-      return { ok: false, error: "Topic name is required" };
-    }
-    
-    try {
-      // Try to insert the topic
-      await REGISTRANTS
-        .prepare("INSERT OR IGNORE INTO topics (name) VALUES (?)")
-        .bind(topicName)
-        .run();
-      
-      // Get the topic ID to return
-      const { results } = await REGISTRANTS
-        .prepare("SELECT id FROM topics WHERE name = ?")
-        .bind(topicName)
-        .all();
-      
-      return { 
-        ok: true, 
-        topic: { id: results?.[0]?.id, name: topicName },
-        action: "save_topic"
-      };
-    } catch (error) {
-      console.error("Save topic error:", error);
-      return { ok: false, error: "Failed to save topic" };
-    }
-  }
-  
-  // Handle main registration form submission
-  const firstName = sanitizeString(String(formData.get("first_name") ?? ""));
-  const lastName = sanitizeString(String(formData.get("last_name") ?? ""));
-  const name = [firstName, lastName].filter(Boolean).join(" ").trim();
-  const email = sanitizeEmail(String(formData.get("email") ?? ""));
-  const dietary = sanitizeString(String(formData.get("dietary") ?? ""));
-  const dietaryOther = sanitizeString(String(formData.get("dietary_other") ?? ""));
+  const firstName = String(formData.get("first_name") ?? "").trim();
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  const name = [title, firstName, lastName].filter(Boolean).join(" ").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const dietary = String(formData.get("dietary") ?? "").trim();
+  const dietaryOther = String(formData.get("dietary_other") ?? "").trim();
   const alcohol = formData.get("alcohol");
   const speechPreferenceRaw = formData.get("speech_preference");
   const researchConsentRaw = formData.get("research_consent");
@@ -243,8 +148,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   const originalPriority = Number(formData.get('original_priority') ?? 0);
   
   // Get languages and topics from form data
-  const languages = formData.getAll("languages").map(String).map(sanitizeLanguageOrTopic).filter(Boolean);
-  const topics = formData.getAll("topics").map(String).map(sanitizeLanguageOrTopic).filter(Boolean);
+  const languages = formData.getAll("languages").map(String).filter(Boolean);
+  const topics = formData.getAll("topics").map(String).filter(Boolean);
   
   if (!firstName || !lastName || !email || !dietary || !alcohol) {
     return { ok: false, error: homeContent.messages.error.validation };
@@ -258,7 +163,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   const researchConsent = researchConsentRaw === "yes";
 
   // Validate email format
-  if (!validateEmail(email)) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
     return { ok: false, error: "Please provide a valid email address." };
   }
 
@@ -344,7 +250,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // Process languages
     const languageStatements = [];
     for (const languageName of languages) {
-      const trimmedLanguage = sanitizeLanguageOrTopic(languageName);
+      const trimmedLanguage = languageName.trim();
       if (trimmedLanguage) {
         // Try to insert the language (will fail if it already exists due to UNIQUE constraint)
         languageStatements.push(
@@ -356,7 +262,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     // Process topics
     const topicStatements = [];
     for (const topicName of topics) {
-      const trimmedTopic = sanitizeLanguageOrTopic(topicName);
+      const trimmedTopic = topicName.trim();
       if (trimmedTopic) {
         // Try to insert the topic (will fail if it already exists due to UNIQUE constraint)
         topicStatements.push(
@@ -378,7 +284,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const registrantTopicStatements = [];
     
     for (const languageName of languages) {
-      const trimmedLanguage = sanitizeLanguageOrTopic(languageName);
+      const trimmedLanguage = languageName.trim();
       if (trimmedLanguage) {
         // Get the language ID
         const { results: languageResults } = await REGISTRANTS
@@ -396,7 +302,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     }
     
     for (const topicName of topics) {
-      const trimmedTopic = sanitizeLanguageOrTopic(topicName);
+      const trimmedTopic = topicName.trim();
       if (trimmedTopic) {
         // Get the topic ID
         const { results: topicResults } = await REGISTRANTS
@@ -459,16 +365,12 @@ export async function action({ request, context }: Route.ActionArgs) {
 export default function Home(_: Route.ComponentProps) {
   const data = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const languageFetcher = useFetcher();
-  const topicFetcher = useFetcher();
   
   // State for managing new languages and topics
   const [newLanguage, setNewLanguage] = useState("");
   const [newTopic, setNewTopic] = useState("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [newlyAddedLanguages, setNewlyAddedLanguages] = useState<Array<{id: number, name: string}>>([]);
-  const [newlyAddedTopics, setNewlyAddedTopics] = useState<Array<{id: number, name: string}>>([]);
   
   // State to track alcohol preference
   const [alcoholPreference, setAlcoholPreference] = useState(false);
@@ -492,59 +394,11 @@ export default function Home(_: Route.ComponentProps) {
     setIsSubmitted(true);
   }
   
-  // Handle fetcher responses for language and topic saves
-  useEffect(() => {
-    if (languageFetcher.data && languageFetcher.state === "idle") {
-      const result = languageFetcher.data as any;
-      if (result.ok && result.action === "save_language" && result.language) {
-        // Add to selected languages immediately
-        setSelectedLanguages(prev => [...prev, result.language.name]);
-        setNewLanguage("");
-        
-        // Add to newly added languages list so it appears in the existing languages section
-        // Only add if it's not already in the database or newly added list
-        const isInDatabase = data.languages.some((lang: { id: number; name: string }) => lang.name === result.language.name);
-        const isAlreadyAdded = newlyAddedLanguages.some(lang => lang.name === result.language.name);
-        if (!isInDatabase && !isAlreadyAdded) {
-          setNewlyAddedLanguages(prev => [...prev, result.language]);
-        }
-      } else if (!result.ok) {
-        console.error("Failed to save language:", result.error);
-      }
-    }
-  }, [languageFetcher.data, languageFetcher.state, newlyAddedLanguages]);
-
-  useEffect(() => {
-    if (topicFetcher.data && topicFetcher.state === "idle") {
-      const result = topicFetcher.data as any;
-      if (result.ok && result.action === "save_topic" && result.topic) {
-        // Add to selected topics immediately
-        setSelectedTopics(prev => [...prev, result.topic.name]);
-        setNewTopic("");
-        
-        // Add to newly added topics list so it appears in the existing topics section
-        // Only add if it's not already in the database or newly added list
-        const isInDatabase = data.topics.some((topic: { id: number; name: string }) => topic.name === result.topic.name);
-        const isAlreadyAdded = newlyAddedTopics.some(topic => topic.name === result.topic.name);
-        if (!isInDatabase && !isAlreadyAdded) {
-          setNewlyAddedTopics(prev => [...prev, result.topic]);
-        }
-      } else if (!result.ok) {
-        console.error("Failed to save topic:", result.error);
-      }
-    }
-  }, [topicFetcher.data, topicFetcher.state, newlyAddedTopics]);
-  
   const handleAddLanguage = () => {
     const trimmed = newLanguage.trim();
     if (trimmed && !selectedLanguages.includes(trimmed)) {
-      // Create form data for the language save action
-      const formData = new FormData();
-      formData.append("action_type", "save_language");
-      formData.append("language_name", trimmed);
-      
-      // Use the fetcher to submit the form data
-      languageFetcher.submit(formData, { method: "post" });
+      setSelectedLanguages([...selectedLanguages, trimmed]);
+      setNewLanguage("");
     }
   };
   
@@ -555,13 +409,8 @@ export default function Home(_: Route.ComponentProps) {
   const handleAddTopic = () => {
     const trimmed = newTopic.trim();
     if (trimmed && !selectedTopics.includes(trimmed)) {
-      // Create form data for the topic save action
-      const formData = new FormData();
-      formData.append("action_type", "save_topic");
-      formData.append("topic_name", trimmed);
-      
-      // Use the fetcher to submit the form data
-      topicFetcher.submit(formData, { method: "post" });
+      setSelectedTopics([...selectedTopics, trimmed]);
+      setNewTopic("");
     }
   };
   
@@ -947,35 +796,42 @@ export default function Home(_: Route.ComponentProps) {
               <label className="block text-sm font-medium mb-2">{homeContent.form.sections.information.fields.languages.label}</label>
               <div className="space-y-3">
                 {/* Existing languages */}
-                {(() => {
-                  // Combine languages from database and newly added, removing duplicates
-                  const existingLanguageNames = data.languages.map((l: { id: number; name: string }) => l.name);
-                  const allLanguages = [
-                    ...data.languages,
-                    ...newlyAddedLanguages.filter(lang => !existingLanguageNames.includes(lang.name))
-                  ];
-                  
-                  return allLanguages.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {allLanguages.map((language: { id: number; name: string }) => (
-                        <div key={language.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`language_${language.id}`}
-                            checked={selectedLanguages.includes(language.name)}
-                            onChange={(e) => handleLanguageCheckbox(language.name, e.target.checked)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor={`language_${language.id}`} className="ml-2 text-sm font-medium cursor-pointer">
-                            {language.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                {data.languages.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {data.languages.map((language: { id: number; name: string }) => (
+                      <div key={language.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`language_${language.id}`}
+                          checked={selectedLanguages.includes(language.name)}
+                          onChange={(e) => handleLanguageCheckbox(language.name, e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor={`language_${language.id}`} className="ml-2 text-sm font-medium cursor-pointer">
+                          {language.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 
-
+                {/* Selected languages display */}
+                {selectedLanguages.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedLanguages.map((language) => (
+                      <span key={language} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        {language}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLanguage(language)}
+                          className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 dark:hover:bg-blue-800 dark:hover:text-blue-300"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 
                 {/* Add new language */}
                 <div className="flex gap-2">
@@ -1011,35 +867,42 @@ export default function Home(_: Route.ComponentProps) {
               <label className="block text-sm font-medium mb-2">{homeContent.form.sections.information.fields.topics.label}</label>
               <div className="space-y-3">
                 {/* Existing topics */}
-                {(() => {
-                  // Combine topics from database and newly added, removing duplicates
-                  const existingTopicNames = data.topics.map((t: { id: number; name: string }) => t.name);
-                  const allTopics = [
-                    ...data.topics,
-                    ...newlyAddedTopics.filter(topic => !existingTopicNames.includes(topic.name))
-                  ];
-                  
-                  return allTopics.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {allTopics.map((topic: { id: number; name: string }) => (
-                        <div key={topic.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            id={`topic_${topic.id}`}
-                            checked={selectedTopics.includes(topic.name)}
-                            onChange={(e) => handleTopicCheckbox(topic.name, e.target.checked)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label htmlFor={`topic_${topic.id}`} className="ml-2 text-sm font-medium cursor-pointer">
-                            {topic.name}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                {data.topics.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {data.topics.map((topic: { id: number; name: string }) => (
+                      <div key={topic.id} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`topic_${topic.id}`}
+                          checked={selectedTopics.includes(topic.name)}
+                          onChange={(e) => handleTopicCheckbox(topic.name, e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <label htmlFor={`topic_${topic.id}`} className="ml-2 text-sm font-medium cursor-pointer">
+                          {topic.name}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 
-
+                {/* Selected topics display */}
+                {selectedTopics.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTopics.map((topic) => (
+                      <span key={topic} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        {topic}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTopic(topic)}
+                          className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-green-400 hover:bg-green-200 hover:text-green-500 dark:hover:bg-green-800 dark:hover:text-green-300"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 
                 {/* Add new topic */}
                 <div className="flex gap-2">
