@@ -378,6 +378,9 @@ export default function Home(_: Route.ComponentProps) {
   // State to track if form was successfully submitted
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // State to track menu visibility
+  const [isMenuExpanded, setIsMenuExpanded] = useState(false);
 
   // Check if user is on mobile device
   useEffect(() => {
@@ -727,6 +730,89 @@ export default function Home(_: Route.ComponentProps) {
                     className="w-full rounded-md border border-gray-300 bg-white p-2 dark:border-gray-700 dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm" 
                   />
                 </div>
+              </div>
+              
+              {/* Expandable Menu Section */}
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsMenuExpanded(!isMenuExpanded)}
+                  className="flex items-center justify-between w-full p-3 text-left bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                >
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    View Menu Options
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                      isMenuExpanded ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isMenuExpanded && (
+                  <div className="mt-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+                    <div className="space-y-6">
+                      {/* None Menu */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                          Standard Menu
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="border-l-4 border-blue-500 pl-4">
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Sea Bass & Crayfish Ceviche</h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Tomato, lime, coriander, agua chile and citrus–avocado cream
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-blue-500 pl-4">
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Pan-Seared Salmon Fillet</h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Sautéed kohlrabi and carrot, arugula emulsion, pickled red onion, new potatoes with dill and lemon
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-blue-500 pl-4">
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Amaretto Cream</h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Poached blackberries, lemon curd and hazelnut crunch
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Vegan Menu */}
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
+                          Vegan Menu
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="border-l-4 border-green-500 pl-4">
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Beet Carpaccio</h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Carrot hummus, sea-salt roasted seeds, crispy kale and lime
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-green-500 pl-4">
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Crispy Tofu</h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Green pea mousse, black/soy/white bean salsa with coriander and chili, salsify and toasted seeds, vegan chili mayo, red-lentil tabbouleh
+                            </p>
+                          </div>
+                          <div className="border-l-4 border-green-500 pl-4">
+                            <h5 className="font-medium text-gray-900 dark:text-gray-100">Soy Brownie</h5>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Dark chocolate mousse, exotic fruit salsa, strawberry syrup
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
