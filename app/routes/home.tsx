@@ -475,7 +475,20 @@ export default function Home(_: Route.ComponentProps) {
                 >
                   View Admin Panel
                 </a>
-                <span>to see registrations and manage the demo data.</span>
+                <span>to see registrations and manage the demo data. Or go to the</span>
+                <a
+                  href="https://www.github.com/vagdur/defence-party-page/"
+                  className="font-medium underline hover:text-amber-900 dark:hover:text-amber-100 transition-colors"
+                >
+                  GitHub repository
+                </a>
+                <span>to see the code and backend of this page.</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span>ℹ️</span>
+                <span>Do you want to use this URL and page template for your own party?
+                  Reach out to me on GitHub or via email (see the GitHub profile) and we can discuss how to set it up for your event!
+                </span>
               </div>
             </div>
           </div>
